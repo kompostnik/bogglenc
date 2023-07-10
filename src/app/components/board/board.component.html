@@ -17,7 +17,8 @@
         </div>
 
         <div>
-            <app-timer [timeProgress$]="timeProgress$"></app-timer>
+            <app-timer [timeProgress$]="timeProgress$"
+                        [gameOverCondition]="gameOverCondition"></app-timer>
         </div>
 
         <div class="commands">
@@ -38,14 +39,14 @@
                         <div class="flex-grow-1 justify-content-center d-flex align-items-center p-4">
                             <div [class.text-danger]="wordInvalid"
                                  class="me-2 text-uppercase">{{gameService.currentWord}}</div>
-                            <span *ngIf="gameService.currentWord.length < 3" class="text-muted"
-                                  style="font-size: 12px;">(Vsaj 3 črke)</span>
+                            <span *ngIf="gameService.currentWord.length < wordLengthLimit" class="text-muted"
+                                  style="font-size: 12px;">(Vsaj {{wordLengthLimit}} črke)</span>
 
                         </div>
                         <button (click)="submit()"
                                 *ngIf="!wordInvalid"
-                                [class.shadow-sm]="gameService.currentWord.length >= 3 && !(inProgress$ | async)"
-                                [disabled]="gameService.currentWord.length < 3 || (inProgress$ | async)"
+                                [class.shadow-sm]="gameService.currentWord.length >= wordLengthLimit && !(inProgress$ | async)"
+                                [disabled]="gameService.currentWord.length < wordLengthLimit || (inProgress$ | async)"
                                 class="btn btn-primary rounded-1 ps-3 pe-3 right-command text-white"
                                 type="button">
                             <i *ngIf="!(inProgress$ | async)" class="bi bi-send"></i>

@@ -1,5 +1,5 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit} from '@angular/core';
-import {BehaviorSubject} from "rxjs";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
     selector: 'app-timer',
@@ -11,6 +11,8 @@ export class TimerComponent implements OnInit {
 
     @Input()
     timeProgress$!: BehaviorSubject<number>;
+    @Input()
+    gameOverCondition!: number;
 
     time = 0;
 
@@ -23,5 +25,14 @@ export class TimerComponent implements OnInit {
             this.time = value;
             this.cdr.markForCheck();
         });
+    }
+
+    get width() {
+        return this.time / this.gameOverCondition * 100;
+    }
+
+    get lastSeconds():boolean {
+        // is 10 seconds or less left
+        return this.gameOverCondition - this.time <= 10;
     }
 }

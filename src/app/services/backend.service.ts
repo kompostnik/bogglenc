@@ -1,7 +1,7 @@
-import {environment} from "../../environments/environment";
-import {Injectable} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
-import {Observable} from "rxjs";
+import { environment } from '../../environments/environment';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 export interface Letter {
     char: string;
@@ -17,6 +17,7 @@ export interface Game {
     name: string | null;
     startedAt: number;
     endedAt: number | null;
+    level: number;
 }
 
 export interface CheckWordResult {

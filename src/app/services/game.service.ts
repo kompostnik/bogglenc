@@ -1,6 +1,6 @@
-import {Injectable} from '@angular/core';
-import {Subject} from "rxjs";
-import {BackendService, Game, Letter} from "./backend.service";
+import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
+import { BackendService, Game, Letter } from './backend.service';
 
 export interface BoggleLetter extends Letter {
     selected: boolean
@@ -29,6 +29,7 @@ export class GameService {
     public static GAME_TIME_OUT_MILIS = 1000;
     public static GAME_WORDS_LIMIT = 100;
     public static GAME_END_CONDITION_IN_SECONDS = 100;
+    public static GAME_WORD_LENGTH_LIMIT = 3;
     public static BOARD_SIZE = 16;
     public static LOCAL_STORAGE_GAME_DATA = 'gameDataV2';
     public static LOCAL_STORAGE_GAME_SETTINGS = 'gameSettings';

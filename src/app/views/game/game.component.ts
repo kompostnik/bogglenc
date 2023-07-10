@@ -1,10 +1,10 @@
-import {ChangeDetectorRef, Component, OnDestroy, OnInit} from '@angular/core';
-import {GameService} from "../../services/game.service";
-import {MenuComponent} from "../../components/menu/menu.component";
-import {BsModalService} from "ngx-bootstrap/modal";
-import {BehaviorSubject, catchError, Subject, throwError} from "rxjs";
-import {BackendService, CheckWordResult} from "../../services/backend.service";
-import {Router} from "@angular/router";
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { GameService } from '../../services/game.service';
+import { MenuComponent } from '../../components/menu/menu.component';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { BehaviorSubject, catchError, Subject, throwError } from 'rxjs';
+import { BackendService, CheckWordResult, Game } from '../../services/backend.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-game',
@@ -17,6 +17,7 @@ export class GameComponent implements OnInit, OnDestroy {
     timeProgress$ = new BehaviorSubject<number>(0);
     wordValid$ = new Subject<boolean>()
     gameOverConditionInSeconds = GameService.GAME_END_CONDITION_IN_SECONDS;
+    wordLengthLimit = GameService.GAME_WORD_LENGTH_LIMIT;
     private timerInterval!: any
     private applyChangesTimeout!: number;
 
@@ -34,7 +35,9 @@ export class GameComponent implements OnInit, OnDestroy {
         } else {
             this.createTimer();
         }
-
+        
+        this.processLevelUps(this.gameService.gameData?.game!)
+        
         // function to subscribe to inProgress BehaviorSubject
         this.inProgress$.subscribe(value => {
             if (value) {
@@ -143,7 +146,37 @@ export class GameComponent implements OnInit, OnDestroy {
         this.wordValid$.next(true);
         this.gameService.gameData!.timerProgress = Math.max(this.gameService.gameData!.timerProgress - this.gameService.timeBonusByWord(), 0);;
         this.timeProgress$.next(this.gameService.gameData!.timerProgress);
+        this.processLevelUps(check.game);
         this.cdr.detectChanges();
     }
 
+    private processLevelUps(game: Game) {
+        // reduce game over condition by level for 20%
+        if (game.level === 1) {
+            this.gameOverConditionInSeconds = GameService.GAME_END_CONDITION_IN_SECONDS;
+        }
+        if (game.level === 2) {
+            this.gameOverConditionInSeconds = 80;
+        }
+        if (game.level === 3) {
+            this.gameOverConditionInSeconds = 64;
+        }
+        if (game.level === 4) {
+            this.gameOverConditionInSeconds = 51;
+        }
+        if (game.level === 5) {
+            this.gameOverConditionInSeconds = 40;
+        }
+        if (game.level === 6) {
+            this.gameOverConditionInSeconds = 32;
+        }
+        if (game.level === 7) {
+            this.gameOverConditionInSeconds = 26;
+            this.wordLengthLimit = 4
+        }
+        if (game.level === 8) {
+            this.gameOverConditionInSeconds = 20;
+            this.wordLengthLimit = 5
+        }
+    }
 }

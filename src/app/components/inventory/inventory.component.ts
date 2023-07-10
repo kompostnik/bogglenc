@@ -1,7 +1,7 @@
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
-import {BsModalRef, BsModalService} from "ngx-bootstrap/modal";
-import {GameService} from "../../services/game.service";
-import {AchievementsComponent} from "../achievements/achievements.component";
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { GameService } from '../../services/game.service';
+import { AchievementsComponent } from '../achievements/achievements.component';
 
 @Component({
     selector: 'app-inventory',
@@ -13,6 +13,9 @@ export class InventoryComponent {
 
     @Input()
     gameOverCondition!: number;
+
+    @Input()
+    level!: number;
 
     modalRef?: BsModalRef;
 

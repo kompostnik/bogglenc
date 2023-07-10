@@ -8,11 +8,11 @@ import {
     OnInit,
     Output
 } from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {BoggleLetter, GameService} from "../../services/game.service";
-import {BsModalService} from "ngx-bootstrap/modal";
-import {BackendService} from "../../services/backend.service";
-import {BehaviorSubject, Subject} from "rxjs";
+import { HttpClient } from '@angular/common/http';
+import { BoggleLetter, GameService } from '../../services/game.service';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { BackendService } from '../../services/backend.service';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 @Component({
     selector: 'app-board',
@@ -40,8 +40,12 @@ export class BoardComponent implements OnInit, OnDestroy {
     @Input()
     timeProgress$!: BehaviorSubject<number>;
 
+    @Input()
+    wordLengthLimit !: number;
+
     @Output()
     wordSubmitEvent = new EventEmitter<number[]>();
+
     private flipTimeout!: number;
 
     constructor(private httpClient: HttpClient,
@@ -53,7 +57,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     }
 
     selectCell(row: number, index: number) {
-        this.wordInvalid = false
+        this.wordInvalid = false;
 
         let cell = this.lettersBag[row][index];
 
@@ -95,41 +99,43 @@ export class BoardComponent implements OnInit, OnDestroy {
     calculateWordLengthValue(word: string) {
         let score = 0;
         if (word.length >= 4) {
-            score += Math.pow(2, word.length - 4)
+            score += Math.pow(2, word.length - 4);
         }
-        return score
+        return score;
     }
 
     submit() {
 
         const selectedLetters = this.gameService.boardBag
             .filter(letter => {
-                return letter.selected
+                return letter.selected;
             });
         selectedLetters.sort((a, b) => a.selectedIndex - b.selectedIndex);
         const selectedLetterIndexes = selectedLetters.map(letter => {
             return letter.boardIndex;
-        })
+        });
         this.wordSubmitEvent.emit(selectedLetterIndexes);
     }
 
     restCurrentWord() {
-        this.wordInvalid = false
+        this.wordInvalid = false;
         this.gameService.boardBag.forEach(value => {
-            value.selected = false
-            value.selectedIndex = 0
-        })
+            value.selected = false;
+            value.selectedIndex = 0;
+        });
         this.gameService.persistGameData();
     }
 
     ngOnInit(): void {
         this.wordValid$.subscribe(value => {
             if (value) {
-                this.wordCorrect()
+                this.wordCorrect();
             } else {
                 this.wordIncorrect();
             }
-        })
+        });
+
+        this.setupWordLengthLimit();
     }
 
     ngOnDestroy(): void {
@@ -147,10 +153,19 @@ export class BoardComponent implements OnInit, OnDestroy {
             .map(letter => letter.boardIndex);
 
         this.flipTimeout = setTimeout(() => {
-            this.flipCards = []
+            this.flipCards = [];
         }, 1000);
 
-        this.wordInvalid = false
+        this.setupWordLengthLimit();
+        this.wordInvalid = false;
         this.cdr.markForCheck();
+    }
+
+    private setupWordLengthLimit() {
+        if (this.gameService.gameData?.game.level! === 7) {
+            this.wordLengthLimit = 4;
+        } else if (this.gameService.gameData?.game.level! >= 8) {
+            this.wordLengthLimit = 5;
+        }
     }
 }

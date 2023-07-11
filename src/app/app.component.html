@@ -1,74 +1,11 @@
 <main role="main">
     <div class="d-flex align-items-center">
-        <div class="container p-4">
-            <router-outlet></router-outlet>
-
-<!--            <ng-container *ngIf="gameService.isShowMainMenu">-->
-<!--                <app-main-menu></app-main-menu>-->
-<!--            </ng-container>-->
-
-<!--            <ng-container *ngIf="this.gameService.gameData && !gameService.isShowMainMenu">-->
-<!--                <div class="row border-bottom">-->
-<!--                    <div class="col-3 p-2 border-end">-->
-<!--                        <app-score></app-score>-->
-<!--                    </div>-->
-<!--                    <div class="col p-2 d-flex align-items-center">-->
-<!--                        <app-inventory></app-inventory>-->
-<!--                        <button (click)="actionOpenMenu()"-->
-<!--                                aria-label="Meni"-->
-<!--                                class="btn btn-outline-secondary ms-auto"-->
-<!--                                type="button">-->
-<!--                            <i class="bi bi-list"></i>-->
-<!--                        </button>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                <div class="row">-->
-<!--                    <div class="col p-2 pt-3" role="application">-->
-<!--                        <app-board *ngIf="gameService.gameState === GameState.SELECTING"-->
-<!--                                   [lettersBag]="gameService.gameData.lettersBag"></app-board>-->
-<!--                        <div *ngIf="gameService.gameState === GameState.LOSS" class="text-center">-->
-<!--                            <div class="mb-2 big-text">Konec igre.</div>-->
-<!--                            <button (click)="actionConfirmNewGame()"-->
-<!--                                    class="btn btn-outline-primary ms-auto"-->
-<!--                                    type="button">-->
-<!--                                <i class="bi bi-dice-5-fill"></i> Začni novo-->
-<!--                                <div *ngIf="gameService.newGameCreating$ | async"-->
-<!--                                     aria-hidden="true"-->
-<!--                                     class="spinner-border spinner-border-sm"-->
-<!--                                     role="status"></div>-->
-<!--                            </button>-->
-<!--                        </div>-->
-<!--                        <div *ngIf="gameService.gameState === GameState.VICTORY" class="text-center">-->
-
-<!--                            <ng-container *ngIf="gameService.gameData.game.leaderboardRank! <= 50">-->
-<!--                                <div class="mb-2 big-text">Čestitke za uvrstitev-->
-<!--                                    na {{gameService.gameData.game.leaderboardRank}}. mesto!-->
-<!--                                </div>-->
-<!--                                <button (click)="openLeaderBoardForm()"-->
-<!--                                        *ngIf="!gameService.gameData.game.name"-->
-<!--                                        class="btn btn-primary text-white btn-lg mb-3"-->
-<!--                                        type="button">-->
-<!--                                    <i aria-hidden="true" class="bi bi-trophy"></i> Vpiši se med zmagovalce-->
-<!--                                </button>-->
-<!--                                <br>-->
-<!--                            </ng-container>-->
-
-<!--                            <div *ngIf="gameService.gameData.game.leaderboardRank! > 50" class="mb-2 big-text">-->
-<!--                                Čestitke!-->
-<!--                            </div>-->
-
-<!--                            <button (click)="actionConfirmNewGame()"-->
-<!--                                    class="btn btn-outline-primary ms-auto mb-3"-->
-<!--                                    type="button">-->
-<!--                                <i class="bi bi-dice-5-fill"></i> Začni novo-->
-<!--                            </button>-->
-
-<!--                            <app-leader-board></app-leader-board>-->
-<!--                            <app-victory-confetti></app-victory-confetti>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </ng-container>-->
+        <div class="container p-0 px-2">
+            <div class="row">
+                <div class="col-sm-12 col-md-8 offset-md-2 col-xl-4 offset-xl-4">
+                    <router-outlet></router-outlet>
+                </div>
+            </div>
         </div>
     </div>
 </main>

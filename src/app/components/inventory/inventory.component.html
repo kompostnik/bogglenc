@@ -1,12 +1,11 @@
-<div class="d-flex align-items-center h-100">
-    <span>{{level}}</span>
+<div class="d-flex align-items-center justify-content-center h-100">
     <button (click)="actionOpenAchievementsModal()"
             [attr.aria-label]="'Dosežki'"
-            class="btn btn-outline-secondary position-relative goals"
+            class="btn btn-outline-secondary position-relative"
             type="button">
         <div aria-hidden="true" class="d-flex">
-            <i class="bi bi-trophy"></i> <span
-                class="ms-2 d-none d-lg-block">Dosežki</span>
+            <i class="bi bi-trophy"></i>
+            <span>{{level}}</span>
         </div>
     </button>
 </div>

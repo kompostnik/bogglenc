@@ -106,16 +106,16 @@ export class GameComponent implements OnInit, OnDestroy {
             this.pauseTimer()
         }
 
-        this.timerInterval = setInterval(() => {
-            this.gameService.gameData!.timerProgress += 1;
-            this.gameService.persistGameData();
-            if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
-                this.handleGameOverCondition();
-            } else {
-                this.timeProgress$.next(this.gameService.gameData!.timerProgress);
-            }
-
-        }, GameService.GAME_TIME_OUT_MILIS)
+        // this.timerInterval = setInterval(() => {
+        //     this.gameService.gameData!.timerProgress += 1;
+        //     this.gameService.persistGameData();
+        //     if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
+        //         this.handleGameOverCondition();
+        //     } else {
+        //         this.timeProgress$.next(this.gameService.gameData!.timerProgress);
+        //     }
+        //
+        // }, GameService.GAME_TIME_OUT_MILIS)
     }
 
     private handleGameOverCondition() {

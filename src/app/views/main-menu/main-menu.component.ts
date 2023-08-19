@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { GameData, GameService } from '../../services/game.service';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { MenuComponent } from '../../components/menu/menu.component';
@@ -10,7 +10,8 @@ import { LeaderBoardModalComponent } from '../../components/leader-board-modal/l
 @Component({
     selector: 'app-main-menu',
     templateUrl: './main-menu.component.html',
-    styleUrls: ['./main-menu.component.scss']
+    styleUrls: ['./main-menu.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MainMenuComponent {
 

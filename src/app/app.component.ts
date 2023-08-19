@@ -1,10 +1,11 @@
-import {Component, HostListener, OnInit} from '@angular/core';
-import {GameService, GameSettings} from "./services/game.service";
+import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
+import { GameService, GameSettings } from './services/game.service';
 
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+    styleUrls: ['./app.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit {
 

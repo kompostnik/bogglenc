@@ -1,14 +1,15 @@
-import {Component} from '@angular/core';
-import {GameService} from "../../services/game.service";
-import {BsModalService} from "ngx-bootstrap/modal";
-import {LeaderBoardFormComponent} from "../../components/leader-board-form/leader-board-form.component";
-import {Router} from "@angular/router";
-import {AchievementsComponent} from "../../components/achievements/achievements.component";
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { GameService } from '../../services/game.service';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { LeaderBoardFormComponent } from '../../components/leader-board-form/leader-board-form.component';
+import { Router } from '@angular/router';
+import { AchievementsComponent } from '../../components/achievements/achievements.component';
 
 @Component({
     selector: 'app-game-over',
     templateUrl: './game-over.component.html',
-    styleUrls: ['./game-over.component.scss']
+    styleUrls: ['./game-over.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GameOverComponent {
     protected readonly GameService = GameService;

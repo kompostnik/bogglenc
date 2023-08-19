@@ -2,7 +2,7 @@
     <div class="container-small">
         <div *ngIf="inProgress" class="spinner-border spinner-border-sm" role="status"></div>
 
-        <table class="table table-striped">
+        <table class="table table-striped" *ngIf="!inProgress">
             <thead>
                 <th class="col-2">Rank</th>
                 <th class="col-6">Igralec</th>

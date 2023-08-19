@@ -1,13 +1,14 @@
-import {Component} from '@angular/core';
-import {BoggleLetter, GameService} from "../../services/game.service";
-import {BsModalRef} from "ngx-bootstrap/modal";
-import {BackendService} from "../../services/backend.service";
-import {catchError, throwError} from "rxjs";
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { BoggleLetter, GameService } from '../../services/game.service';
+import { BsModalRef } from 'ngx-bootstrap/modal';
+import { BackendService } from '../../services/backend.service';
+import { catchError, throwError } from 'rxjs';
 
 @Component({
     selector: 'app-leader-board-form',
     templateUrl: './leader-board-form.component.html',
-    styleUrls: ['./leader-board-form.component.scss']
+    styleUrls: ['./leader-board-form.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LeaderBoardFormComponent {
     public static VICTORY_ENTRY_MAX_LEN = 16;

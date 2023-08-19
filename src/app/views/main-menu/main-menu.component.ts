@@ -1,11 +1,11 @@
-import {Component} from '@angular/core';
-import {GameData, GameService} from "../../services/game.service";
-import {BsModalRef, BsModalService} from "ngx-bootstrap/modal";
-import {MenuComponent} from "../../components/menu/menu.component";
-import {catchError, Subject, throwError} from "rxjs";
-import {BackendService, Game} from "../../services/backend.service";
-import {Router} from "@angular/router";
-import {LeaderBoardModalComponent} from "../../components/leader-board-modal/leader-board-modal.component";
+import { Component } from '@angular/core';
+import { GameData, GameService } from '../../services/game.service';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { MenuComponent } from '../../components/menu/menu.component';
+import { catchError, Subject, throwError } from 'rxjs';
+import { BackendService, Game } from '../../services/backend.service';
+import { Router } from '@angular/router';
+import { LeaderBoardModalComponent } from '../../components/leader-board-modal/leader-board-modal.component';
 
 @Component({
     selector: 'app-main-menu',
@@ -56,7 +56,7 @@ export class MainMenuComponent {
     actionResumeGame() {
         if (this.existingGame) {
             this.gameService.gameData = this.existingGame;
-            if(this.gameService.gameData.timerProgress >= 100){
+            if(this.gameService.gameData.game.endedAt){
                 this.router.navigate(['game-over'], {skipLocationChange: true})
             } else {
                 this.router.navigate(['game'], {skipLocationChange: true})

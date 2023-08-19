@@ -1,6 +1,5 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { GameService } from '../../services/game.service';
-import { MenuComponent } from '../../components/menu/menu.component';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BehaviorSubject, catchError, Subject, throwError } from 'rxjs';
 import { BackendService, CheckWordResult, Game } from '../../services/backend.service';
@@ -48,8 +47,8 @@ export class GameComponent implements OnInit, OnDestroy {
         })
     }
 
-    actionOpenMenu() {
-        return this.modalService.show(MenuComponent);
+    actionExitGame() {
+        this.router.navigate([''], {skipLocationChange: true})
     }
 
     ngOnDestroy(): void {
@@ -106,16 +105,16 @@ export class GameComponent implements OnInit, OnDestroy {
             this.pauseTimer()
         }
 
-        // this.timerInterval = setInterval(() => {
-        //     this.gameService.gameData!.timerProgress += 1;
-        //     this.gameService.persistGameData();
-        //     if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
-        //         this.handleGameOverCondition();
-        //     } else {
-        //         this.timeProgress$.next(this.gameService.gameData!.timerProgress);
-        //     }
-        //
-        // }, GameService.GAME_TIME_OUT_MILIS)
+        this.timerInterval = setInterval(() => {
+            this.gameService.gameData!.timerProgress += 1;
+            this.gameService.persistGameData();
+            if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
+                this.handleGameOverCondition();
+            } else {
+                this.timeProgress$.next(this.gameService.gameData!.timerProgress);
+            }
+
+        }, GameService.GAME_TIME_OUT_MILIS)
     }
 
     private handleGameOverCondition() {

@@ -85,23 +85,6 @@ const LETTERS: Letter[] = [
   { char: 'ž', weight: 15, score: 10 },
 ];
 
-const SCORE_BY_LENGTH: { [key: number]: number } = {
-  3: 0,
-  4: 1,
-  5: 2,
-  6: 4,
-  7: 8,
-  8: 16,
-  9: 32,
-  10: 64,
-  11: 128,
-  12: 256,
-  13: 512,
-  14: 1024,
-  15: 2048,
-  16: 4096,
-};
-
 const BOARD_SIZE = 16;
 const MIN_WORD_LENGTH = 3;
 const LEADERBOARD_ENTRIES_LIMIT = 50;
@@ -181,10 +164,12 @@ export async function guessTheWord(
   }
 
   const scoreForLetters = getScoreForLetters(wordString);
-  const scoreForLength = SCORE_BY_LENGTH[wordString.length] ?? 0;
+  const scoreForLength = getScoreForLength(wordString, game.level);
   const scoreForWord = scoreForLetters + scoreForLength;
+
   game.score += scoreForWord;
-  game.wordCount = game.wordCount + 1;
+
+  // game.wordCount = game.wordCount + 1;
 
   if(game.score >= 200){
     game.level = 2;
@@ -398,6 +383,23 @@ function shuffleArray(array: unknown[]) {
   }
 }
 
+/**
+ * Table here goes like this:
+ * |length 0|level 1|level 2| level 3|...
+ * |length 1|   1   |   2   |   4    |...
+ * |length 2|   2   |   4   |   8    |...
+ * |length 3|   4   |   8   |   16   |...
+ * | ... | ...
+ * @param word
+ * @param level
+ */
+function getScoreForLength(word: string, level: number): number {
+  if (level === 1 && word.length === 3) {
+    return 1;
+  }
+  const exponent = Math.max((level - 1 + word.length - 3), 1);
+  return Math.pow(2, exponent);
+}
 function getScoreForLetters(word: string): number {
   return word
     .split('')

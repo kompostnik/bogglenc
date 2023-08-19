@@ -67,7 +67,7 @@
                     </div>
                 </div>
             </div>
-            <div *ngIf="gameService.currentWord.length > 2"
+            <div *ngIf="gameService.currentWord.length >= wordLengthLimit"
                  class="text-center"
                  style="font-size: 12px;">
                 {{calculateLettersValue(gameService.currentWord)}}

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BehaviorSubject, catchError, Subject, throwError } from 'rxjs';
@@ -177,5 +177,10 @@ export class GameComponent implements OnInit, OnDestroy {
             this.gameOverConditionInSeconds = 20;
             this.wordLengthLimit = 5
         }
+    }
+
+    @HostListener('document:keydown.escape', ['$event'])
+    onKeydownHandler(event: KeyboardEvent) {
+        this.actionExitGame()
     }
 }

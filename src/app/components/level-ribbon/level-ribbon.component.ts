@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { GameService } from '../../services/game.service';
 
 @Component({
@@ -8,8 +8,11 @@ import { GameService } from '../../services/game.service';
 })
 export class LevelRibbonComponent {
 
-  level= 0;
+  @Input()
+  level = 0;
   constructor(public gameService: GameService) {
-    this.level = this.gameService.gameData?.game?.level || 1;
+    if(!this.level) {
+      this.level = this.gameService.gameData?.game?.level || 1;
+    }
   }
 }

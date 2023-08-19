@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BehaviorSubject, catchError, Subject, throwError } from 'rxjs';
@@ -8,7 +8,8 @@ import { Router } from '@angular/router';
 @Component({
     selector: 'app-game',
     templateUrl: './game.component.html',
-    styleUrls: ['./game.component.scss']
+    styleUrls: ['./game.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GameComponent implements OnInit, OnDestroy {
 

@@ -1,13 +1,14 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {BsModalService} from "ngx-bootstrap/modal";
-import {GameService} from "../../services/game.service";
-import {catchError, Subscription, throwError} from "rxjs";
-import {BackendService, Game} from "../../services/backend.service";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { GameService } from '../../services/game.service';
+import { catchError, Subscription, throwError } from 'rxjs';
+import { BackendService, Game } from '../../services/backend.service';
 
 @Component({
     selector: 'app-leader-board',
     templateUrl: './leader-board.component.html',
-    styleUrls: ['./leader-board.component.scss']
+    styleUrls: ['./leader-board.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LeaderBoardComponent implements OnInit, OnDestroy {
     numbers = Array(50).fill(0).map((x, i) => i);
@@ -17,7 +18,8 @@ export class LeaderBoardComponent implements OnInit, OnDestroy {
 
     constructor(private modalService: BsModalService,
                 public gameService: GameService,
-                public backendService: BackendService) {
+                public backendService: BackendService,
+                private cdr: ChangeDetectorRef) {
     }
 
     ngOnInit() {
@@ -46,6 +48,7 @@ export class LeaderBoardComponent implements OnInit, OnDestroy {
             .subscribe(data => {
                 this.games = data as any[];
                 this.inProgress = false;
+                this.cdr.detectChanges()
             })
     }
 

@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { GameService } from '../../services/game.service';
 
 @Component({
   selector: 'app-level-ribbon',
   templateUrl: './level-ribbon.component.html',
-  styleUrls: ['./level-ribbon.component.scss']
+  styleUrls: ['./level-ribbon.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LevelRibbonComponent {
 

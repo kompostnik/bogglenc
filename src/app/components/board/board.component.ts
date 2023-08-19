@@ -97,9 +97,14 @@ export class BoardComponent implements OnInit, OnDestroy {
     }
 
     calculateWordLengthValue(word: string) {
+        const level = this.gameService.gameData?.game.level!
+        if(level < 2 && word.length === 3){
+            return 1
+        }
+
         let score = 0;
-        if (word.length >= 4) {
-            score += Math.pow(2, word.length - 4);
+        if (word.length >= 3) {
+            score += Math.pow(2, Math.max((level - 1 + word.length - 3), 1));
         }
         return score;
     }

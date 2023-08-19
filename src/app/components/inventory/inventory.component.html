@@ -1,11 +1,14 @@
-<div class="d-flex align-items-center justify-content-center h-100">
-    <button (click)="actionOpenAchievementsModal()"
+<div class="d-flex align-items-center justify-content-center h-100 position-relative">
+
+    <button class="ribbon down btn p-0"
+            (click)="actionOpenAchievementsModal()"
             [attr.aria-label]="'Dosežki'"
-            class="btn btn-outline-secondary position-relative"
-            type="button">
-        <div aria-hidden="true" class="d-flex">
+         style="--color: {{level > 5 ? '#DB3498' : level  > 3 ? '#DB7734' : level  > 1 ? '#98DB34' : 'lightgray'}}"
+        [class.up]="level > 4"
+    >
+        <div class="content">
             <i class="bi bi-trophy"></i>
-            <span>{{level}}</span>
+            {{level}}
         </div>
     </button>
 </div>

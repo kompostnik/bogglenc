@@ -1,0 +1,9 @@
+<div class="ribbon down"
+        [attr.aria-label]="'Dosežki'"
+        style="--color: {{level > 5 ? '#DB3498' : level  > 3 ? '#DB7734' : level  > 1 ? '#98DB34' : 'lightgray'}}"
+        [class.up]="level > 4"
+>
+    <div class="content">
+        {{level}}
+    </div>
+</div>

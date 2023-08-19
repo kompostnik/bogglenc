@@ -26,13 +26,9 @@ export function checkWord(word: string): Promise<Word | null> {
     throw new Error('Word is too long!');
   }
 
-  // return mock word
-  return Promise.resolve({  value: word, source: 'mock', cachedSince: 'mock' });
-
-
-  // return checkCache(word).then((cachedWord) => {
-  //   return cachedWord ?? checkFran(word);
-  // });
+  return checkCache(word).then((cachedWord) => {
+    return cachedWord ?? checkFran(word);
+  });
 }
 
 function checkCache(word: string): Promise<Word | null> {

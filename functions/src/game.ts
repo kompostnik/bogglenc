@@ -180,18 +180,18 @@ export async function guessTheWord(
   if(game.score >= 800){
     game.level = 4;
   }
-    if(game.score >= 1600){
+  if(game.score >= 1600){
     game.level = 5;
-    }
-    if(game.score >= 3200){
+  }
+  if(game.score >= 3200){
     game.level = 6;
-    }
-    if(game.score >= 6400){
+  }
+  if(game.score >= 6400){
     game.level = 7;
-    }
-    if(game.score >= 12800){
+  }
+  if(game.score >= 12800){
     game.level = 8;
-    }
+  }
 
 
   replaceLetters(game.board, letterIndexes);

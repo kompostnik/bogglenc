@@ -17,7 +17,6 @@ export interface Game {
     name: string | null;
     startedAt: number;
     endedAt: number | null;
-    level: number;
 }
 
 export interface CheckWordResult {

@@ -97,16 +97,11 @@ export class BoardComponent implements OnInit, OnDestroy {
     }
 
     calculateWordLengthValue(word: string) {
-        const level = this.gameService.gameData?.game.level!
-        if(level < 2 && word.length === 3){
-            return 1
-        }
-
         let score = 0;
-        if (word.length >= 3) {
-            score += Math.pow(2, Math.max((level - 1 + word.length - 3), 1));
+        if (word.length >= 4) {
+            score += Math.pow(2, word.length - 4)
         }
-        return score;
+        return score
     }
 
     submit() {
@@ -138,9 +133,7 @@ export class BoardComponent implements OnInit, OnDestroy {
             } else {
                 this.wordIncorrect();
             }
-        });
-
-        this.setupWordLengthLimit();
+        })
     }
 
     ngOnDestroy(): void {
@@ -161,16 +154,7 @@ export class BoardComponent implements OnInit, OnDestroy {
             this.flipCards = [];
         }, 1000);
 
-        this.setupWordLengthLimit();
-        this.wordInvalid = false;
+        this.wordInvalid = false
         this.cdr.markForCheck();
-    }
-
-    private setupWordLengthLimit() {
-        if (this.gameService.gameData?.game.level! === 7) {
-            this.wordLengthLimit = 4;
-        } else if (this.gameService.gameData?.game.level! >= 8) {
-            this.wordLengthLimit = 5;
-        }
     }
 }

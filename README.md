@@ -35,6 +35,21 @@ ng build
 firebase deploy
 ```
 
+### Predstavitveno okolje
+
+Za nalaganje aplikacije na predstavitveno okolje, je potrebno nastavit v 
+
+```json
+  // environment.ts
+  backendPath: "http://127.0.0.1:5001/bogglenc-feature/europe-west1",
+```
+
+```json
+  // environment.prod.ts
+  backendPath: 'https://europe-west1-bogglenc-feature.cloudfunctions.net'
+```
+ 
+
 ## Tehnični detajli
 
 ### Fran.si

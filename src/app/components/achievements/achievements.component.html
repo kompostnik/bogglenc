@@ -1,7 +1,5 @@
 <app-modal [icon]="'trophy'" [title]="'Dosežki'">
     <div class="h-100">
-        <h2 class="d-flex mb-4">Stopnja <div class="position-relative"><app-level-ribbon></app-level-ribbon></div></h2>
-
         <ng-container [ngTemplateOutletContext]="{words: gameService.guessedWords, title: 'Odkrite besede'}"
                       [ngTemplateOutlet]="wordsList"></ng-container>
 

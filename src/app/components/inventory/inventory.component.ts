@@ -14,9 +14,6 @@ export class InventoryComponent {
     @Input()
     gameOverCondition!: number;
 
-    @Input()
-    level!: number;
-
     modalRef?: BsModalRef;
 
     protected readonly GameService = GameService;

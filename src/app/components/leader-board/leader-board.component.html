@@ -4,10 +4,9 @@
 
         <table class="table table-striped" *ngIf="!inProgress">
             <thead>
-                <th class="col-2">Rank</th>
-                <th class="col-6">Igralec</th>
-                <th class="col-2">Stopnja</th>
-                <th class="col-2">Točke</th>
+            <th class="col-2">Rank</th>
+            <th class="col-6">Igralec</th>
+            <th class="col-2">Točke</th>
             </thead>
             <tbody>
                 <tr
@@ -15,28 +14,13 @@
                     [class.bg-primary]="isCurrentGame(game)"
                     [class.text-white]="isCurrentGame(game)"
                     [class.victory]="isCurrentGame(game)"
-                    id="{{index}}"
-                >
-                    <td>{{index + 1}}</td>
-                    <td>
-                        <div class="d-flex">
-                            <div class="text-uppercase">
-                                {{game.name}}
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="position-relative">
-                            <app-level-ribbon
-                                [level]="game.level"
-                                style="--top: -18px; --width: 24px; --height: 36px; --font-size: 0.75rem"
-                            ></app-level-ribbon>
-                        </div>
-                    </td>
-                    <td>
-                            <div>{{game.score}}</div>
-                    </td>
-                </tr>
+                    id="{{index}}">
+                <td>{{index + 1}}</td>
+                <td>
+                    <span class="text-uppercase">{{game.name}}</span>
+                </td>
+                <td>{{game.score}}</td>
+            </tr>
             </tbody>
         </table>
     </div>

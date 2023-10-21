@@ -44,11 +44,19 @@ Za nalaganje aplikacije na predstavitveno okolje, je potrebno nastavit v
   backendPath: "http://127.0.0.1:5001/bogglenc-feature/europe-west1",
 ```
 
+in
+
 ```json
   // environment.prod.ts
   backendPath: 'https://europe-west1-bogglenc-feature.cloudfunctions.net'
 ```
- 
+
+in za lokalni razvoj
+
+```shell
+firebase projects:list
+firebase use PROJECT_ID
+```
 
 ## Tehnični detajli
 

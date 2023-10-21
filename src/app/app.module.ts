@@ -21,7 +21,6 @@ import { GameOverComponent } from './views/game-over/game-over.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { TimerComponent } from './components/timer/timer.component';
 import { BoardKeyComponent } from './components/board-key/board-key.component';
-import { LevelRibbonComponent } from './components/level-ribbon/level-ribbon.component';
 
 @NgModule({
     declarations: [
@@ -40,8 +39,7 @@ import { LevelRibbonComponent } from './components/level-ribbon/level-ribbon.com
         GameComponent,
         GameOverComponent,
         TimerComponent,
-        BoardKeyComponent,
-        LevelRibbonComponent
+        BoardKeyComponent
     ],
     imports: [
         ModalModule.forRoot(),

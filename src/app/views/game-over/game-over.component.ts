@@ -4,6 +4,7 @@ import { BsModalService } from 'ngx-bootstrap/modal';
 import { LeaderBoardFormComponent } from '../../components/leader-board-form/leader-board-form.component';
 import { Router } from '@angular/router';
 import { AchievementsComponent } from '../../components/achievements/achievements.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-game-over',
@@ -16,7 +17,8 @@ export class GameOverComponent {
 
     constructor(public gameService: GameService,
                 private modalService: BsModalService,
-                private router: Router) {
+                private router: Router,
+                public authService: AuthService) {
 
     }
 

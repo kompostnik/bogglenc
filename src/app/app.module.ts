@@ -2,8 +2,11 @@ import { isDevMode, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { connectAuthEmulator, getAuth, provideAuth } from '@angular/fire/auth';
 import { AppComponent } from './app.component';
 import { BoardComponent } from './components/board/board.component';
+import { environment } from '../environments/environment';
 import { HttpClientModule } from '@angular/common/http';
 import { ScoreComponent } from './components/score/score.component';
 import { InventoryComponent } from './components/inventory/inventory.component';
@@ -21,6 +24,9 @@ import { GameOverComponent } from './views/game-over/game-over.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { TimerComponent } from './components/timer/timer.component';
 import { BoardKeyComponent } from './components/board-key/board-key.component';
+import { ProfileComponent } from './views/profile/profile.component';
+import { AuthComponent } from './views/auth/auth.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
     declarations: [
@@ -39,9 +45,21 @@ import { BoardKeyComponent } from './components/board-key/board-key.component';
         GameComponent,
         GameOverComponent,
         TimerComponent,
-        BoardKeyComponent
+        BoardKeyComponent,
+        ProfileComponent,
+        AuthComponent
     ],
     imports: [
+        provideFirebaseApp(() => initializeApp(environment.firebase)),
+        provideAuth(() => {
+            const auth = getAuth();
+            if (isDevMode()) {
+                connectAuthEmulator(auth, 'http://localhost:9099', {
+                    disableWarnings: true
+                });
+            }
+            return auth;
+        }),
         ModalModule.forRoot(),
         BrowserModule,
         AppRoutingModule,
@@ -51,7 +69,8 @@ import { BoardKeyComponent } from './components/board-key/board-key.component';
             // Register the ServiceWorker as soon as the application is stable
             // or after 30 seconds (whichever comes first).
             registrationStrategy: 'registerWhenStable:30000'
-        })
+        }),
+        FormsModule
     ],
     providers: [],
     bootstrap: [AppComponent]

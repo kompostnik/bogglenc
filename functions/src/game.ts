@@ -3,31 +3,31 @@ import * as crypto from 'crypto';
 import * as wordService from './word';
 
 type LetterChar =
-    | 'a'
-    | 'b'
-    | 'c'
-    | 'č'
-    | 'd'
-    | 'e'
-    | 'f'
-    | 'g'
-    | 'h'
-    | 'i'
-    | 'j'
-    | 'k'
-    | 'l'
-    | 'm'
-    | 'n'
-    | 'o'
-    | 'p'
-    | 'r'
-    | 's'
-    | 'š'
-    | 't'
-    | 'u'
-    | 'v'
-    | 'z'
-    | 'ž';
+  | 'a'
+  | 'b'
+  | 'c'
+  | 'č'
+  | 'd'
+  | 'e'
+  | 'f'
+  | 'g'
+  | 'h'
+  | 'i'
+  | 'j'
+  | 'k'
+  | 'l'
+  | 'm'
+  | 'n'
+  | 'o'
+  | 'p'
+  | 'r'
+  | 's'
+  | 'š'
+  | 't'
+  | 'u'
+  | 'v'
+  | 'z'
+  | 'ž';
 
 export interface Letter {
   char: LetterChar;
@@ -123,15 +123,15 @@ export function startGame(): Promise<Game> {
     endedAndNamed: false,
   };
   return db
-      .collection('games')
-      .doc(game.id)
-      .set(game)
-      .then(() => game);
+    .collection('games')
+    .doc(game.id)
+    .set(game)
+    .then(() => game);
 }
 
 export async function guessTheWord(
-    gameId: string,
-    letterIndexes: number[],
+  gameId: string,
+  letterIndexes: number[],
 ): Promise<CheckWordResult> {
   // request validation
   if (!gameId?.length) {
@@ -163,8 +163,8 @@ export async function guessTheWord(
 
   // check if word is valid
   const wordString = letterIndexes
-      .map((index) => game.board[index].char)
-      .join('');
+    .map((index) => game.board[index].char)
+    .join('');
   const word = await wordService.checkWord(wordString);
 
   if (!word) {
@@ -260,19 +260,19 @@ export async function submitName(gameId: string, name: string): Promise<Game> {
 
 export function getLeaderboard(): Promise<Game[]> {
   return db
-      .collection('games')
-      .where('endedAndNamed', '==', true)
-      .orderBy('score', 'desc')
-      .orderBy('endedAt', 'asc')
-      .limit(LEADERBOARD_ENTRIES_LIMIT)
-      .get()
-      .then((querySnapshot) => {
-        const games: Game[] = [];
-        querySnapshot.forEach((doc) => {
-          games.push(doc.data() as Game);
-        });
-        return games;
+    .collection('games')
+    .where('endedAndNamed', '==', true)
+    .orderBy('score', 'desc')
+    .orderBy('endedAt', 'asc')
+    .limit(LEADERBOARD_ENTRIES_LIMIT)
+    .get()
+    .then((querySnapshot) => {
+      const games: Game[] = [];
+      querySnapshot.forEach((doc) => {
+        games.push(doc.data() as Game);
       });
+      return games;
+    });
 }
 
 function generateRandomBoard(): Letter[] {
@@ -303,8 +303,8 @@ function generateRandomBoard(): Letter[] {
 
 function replaceLetters(board: Letter[], indexesToReplace: number[]) {
   const keptLetters = board
-      .filter((_, index) => !indexesToReplace.includes(index))
-      .map((letter) => letter.char);
+    .filter((_, index) => !indexesToReplace.includes(index))
+    .map((letter) => letter.char);
 
   const uniqueLetters: Set<LetterChar> = new Set(keptLetters);
 
@@ -316,9 +316,9 @@ function replaceLetters(board: Letter[], indexesToReplace: number[]) {
     do {
       newLetter = generateRandomLetter();
     } while (
-        uniqueLetters.has(newLetter.char) &&
-        uniqueLetters.size < MIN_UNIQUE_LETTERS_PER_BOARD
-        );
+      uniqueLetters.has(newLetter.char) &&
+      uniqueLetters.size < MIN_UNIQUE_LETTERS_PER_BOARD
+    );
 
     newLetters.push(newLetter);
     uniqueLetters.add(newLetter.char);
@@ -341,14 +341,14 @@ function ensureSolvable(board: Letter[], indexesToReplace: number[]) {
   }
 
   const randomIndexToReplace =
-      indexesToReplace[Math.floor(Math.random() * indexesToReplace.length)];
+    indexesToReplace[Math.floor(Math.random() * indexesToReplace.length)];
   board[randomIndexToReplace] = LETTER_R;
 }
 
 function generateRandomLetter(): Letter {
   const totalWeightSum = LETTERS.reduce(
-      (sum, letter) => sum + letter.weight,
-      0,
+    (sum, letter) => sum + letter.weight,
+    0,
   );
 
   const targetWeightSum = Math.random() * totalWeightSum;
@@ -374,20 +374,20 @@ function shuffleArray(array: unknown[]) {
 
 function getScoreForLetters(word: string): number {
   return word
-      .split('')
-      .map((char) => {
-        const letter = LETTERS.find((letter) => letter.char === char);
-        return (letter?.score as number) ?? 0;
-      })
-      .reduce((sum, score) => sum + score, 0);
+    .split('')
+    .map((char) => {
+      const letter = LETTERS.find((letter) => letter.char === char);
+      return (letter?.score as number) ?? 0;
+    })
+    .reduce((sum, score) => sum + score, 0);
 }
 
 function getLeaderboardRank(score: number): Promise<number> {
   return db
-      .collection('games')
-      .where('endedAndNamed', '==', true)
-      .where('score', '>=', score)
-      .count()
-      .get()
-      .then((querySnapshot) => querySnapshot.data().count + 1);
+    .collection('games')
+    .where('endedAndNamed', '==', true)
+    .where('score', '>=', score)
+    .count()
+    .get()
+    .then((querySnapshot) => querySnapshot.data().count + 1);
 }

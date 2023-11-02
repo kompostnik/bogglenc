@@ -1,0 +1,86 @@
+<div class="d-flex justify-content-between">
+    <div>
+        <h1 *ngIf="!profileId">Moj Profil</h1>
+        <h1 *ngIf="profileId">Profil {{profileId}}</h1>
+    </div>
+</div>
+
+<div *ngIf="inProgress" class="spinner-border spinner-border-sm" role="status"></div>
+<ng-container *ngIf="!inProgress">
+
+    <div *ngIf="!authService.isAuthenticated" class="row">
+        <div class="col">
+            <p class="alert alert-info">
+                Za ogled profila se moraš prijavit.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col d-flex justify-content-between">
+            <button
+                [routerLink]="''"
+                aria-label="Nastavitve"
+                class="btn btn-outline-secondary"
+                type="button"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Nazaj v Meni
+            </button>
+            <button
+                *ngIf="!authService.isAuthenticated"
+                [routerLink]="'/auth'"
+                aria-label="Prijavi se"
+                class="btn btn-primary"
+                type="button"
+            >
+                Prijavi se
+            </button>
+            <button
+                (click)="actionLogout()"
+                *ngIf="authService.isAuthenticated"
+                aria-label="Odjavi se"
+                class="btn btn-primary"
+                type="button"
+            >
+                Odjavi se
+            </button>
+        </div>
+    </div>
+    <div *ngIf="userProfile" class="row mt-3">
+        <div class="col">
+            Uporabniško ime:
+            <span>{{userProfile.name}}</span>
+        </div>
+    </div>
+    <div *ngIf="userProfile" class="row mt-3">
+        <div class="col">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            <i class="bi bi-record-circle me-1"></i>
+                            Točke
+                        </th>
+                        <th>Datum</th>
+                        <th>
+                            <i class="bi bi-trophy"></i>
+                            Top Beseda
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>5000</td>
+                        <td>12.12.1900</td>
+                        <td>direndaj</td>
+                    </tr>
+                    <tr>
+                        <td>5000</td>
+                        <td>12.12.1900</td>
+                        <td>bulgur</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</ng-container>

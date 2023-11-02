@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
 import { GameService, GameSettings } from './services/game.service';
+import { AuthService } from './services/auth.service';
 
 @Component({
     selector: 'app-root',
@@ -9,7 +10,7 @@ import { GameService, GameSettings } from './services/game.service';
 })
 export class AppComponent implements OnInit {
 
-    constructor(public gameService: GameService) {
+    constructor(public gameService: GameService, private authService: AuthService) {
 
     }
 

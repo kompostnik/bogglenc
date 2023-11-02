@@ -4,7 +4,14 @@
 
 export const environment = {
   production: false,
-  backendPath: "http://127.0.0.1:5001/boggelnc/europe-west1",
+  backendPath: "http://127.0.0.1:5001/bogglenc-feature/europe-west1",
+  firebase: {
+    apiKey: "AIzaSyAFg6_7oES8PFd5Tq-wLMEKfHDNwPKK5Co",
+    authDomain: "bogglenc-feature.firebaseapp.com",
+    projectId: "bogglenc-feature",
+    storageBucket: "bogglenc-feature.appspot.com",
+    messagingSenderId: "612282792652"
+  },
 };
 
 /*

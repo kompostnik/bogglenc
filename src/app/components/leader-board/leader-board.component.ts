@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { BsModalService } from 'ngx-bootstrap/modal';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { GameService } from '../../services/game.service';
 import { catchError, Subscription, throwError } from 'rxjs';
 import { BackendService, Game } from '../../services/backend.service';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-leader-board',
@@ -17,9 +19,12 @@ export class LeaderBoardComponent implements OnInit, OnDestroy {
     private leaderBoardFormSubscription!: Subscription;
 
     constructor(private modalService: BsModalService,
+                private bsModalRef: BsModalRef,
                 public gameService: GameService,
                 public backendService: BackendService,
-                private cdr: ChangeDetectorRef) {
+                private cdr: ChangeDetectorRef,
+                private router: Router,
+                public authService: AuthService) {
     }
 
     ngOnInit() {
@@ -64,5 +69,10 @@ export class LeaderBoardComponent implements OnInit, OnDestroy {
             return game.id === this.gameService.gameData.game.id
         }
         return false;
+    }
+
+    uiActionNavigateToProfile(profile: string | null) {
+        this.bsModalRef.hide();
+        this.router.navigate(['profile', profile]);
     }
 }

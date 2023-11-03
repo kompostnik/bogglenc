@@ -1,4 +1,4 @@
-import { isDevMode, NgModule } from '@angular/core';
+import { APP_INITIALIZER, isDevMode, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -27,6 +27,47 @@ import { BoardKeyComponent } from './components/board-key/board-key.component';
 import { ProfileComponent } from './views/profile/profile.component';
 import { AuthComponent } from './views/auth/auth.component';
 import { FormsModule } from '@angular/forms';
+import { ExtendedFirebaseUIAuthConfig, firebase, firebaseui, FirebaseUIModule } from 'firebaseui-angular-i18n';
+import { AngularFireAuthModule } from '@angular/fire/compat/auth';
+import { AngularFireModule } from '@angular/fire/compat';
+import { AuthService } from './services/auth.service';
+
+const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
+    signInFlow: 'popup',
+    signInOptions: [
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        {
+            scopes: [
+                'public_profile',
+                'email'
+            ],
+            customParameters: {
+                'auth_type': 'reauthenticate'
+            },
+            provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID
+        },
+        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+        firebase.auth.GithubAuthProvider.PROVIDER_ID,
+        {
+            requireDisplayName: false,
+            provider: firebase.auth.EmailAuthProvider.PROVIDER_ID
+        }
+    ],
+    credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
+
+    // Optional. Set it to override the default language (English)
+    language: 'sl'
+};
+
+export function authInitializer(authService: AuthService) {
+    return (): Promise<any> => {
+        return new Promise(resolve => {
+            authService.user$.subscribe(value => {
+                resolve(true);
+            });
+        })
+    };
+}
 
 @NgModule({
     declarations: [
@@ -60,6 +101,11 @@ import { FormsModule } from '@angular/forms';
             }
             return auth;
         }),
+        FormsModule,
+        AppRoutingModule,
+        AngularFireModule.initializeApp(environment.firebase),
+        AngularFireAuthModule,
+        FirebaseUIModule.forRoot(firebaseUiAuthConfig),
         ModalModule.forRoot(),
         BrowserModule,
         AppRoutingModule,
@@ -72,7 +118,14 @@ import { FormsModule } from '@angular/forms';
         }),
         FormsModule
     ],
-    providers: [],
+    providers: [
+        {
+            provide: APP_INITIALIZER,
+            useFactory: authInitializer,
+            deps: [AuthService],
+            multi: true
+        }
+    ],
     bootstrap: [AppComponent]
 })
 export class AppModule {

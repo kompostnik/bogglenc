@@ -38,24 +38,4 @@ html, body {
   max-width: 100%;
 }
 
-#firebaseui-auth-container {
-
-  button{
-    @extend .btn !optional;
-  }
-
-  input{
-    @extend .form-control;
-  }
-  .firebaseui-id-submit{
-    @extend .btn-primary
-  }
-  .firebaseui-id-secondary-link{
-    @extend .btn-secondary
-  }
-  .firebaseui-form-actions{
-    @extend .d-flex
-  }
-}
-
 @import "bootstrap-dark-mode";

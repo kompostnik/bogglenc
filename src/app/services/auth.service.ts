@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Auth, authState, User, user } from '@angular/fire/auth';
-import { Observable } from 'rxjs';
+import { Auth, User, user } from '@angular/fire/auth';
+import { map, Observable } from 'rxjs';
+import { minidenticon } from 'minidenticons';
 
 /**
  * Inspired from
@@ -16,21 +17,22 @@ export class AuthService {
     user$!: Observable<User | null>;
 
     constructor(private readonly _auth: Auth) {
-        this.auth = _auth
-        const authState$ = authState(this.auth);
-        this.user$ = user(this.auth);
-        this.user$.subscribe(value => {
-            if (value) {
-                this.user = { name: value?.displayName } as UserProfile;
-            } else {
-                this.user = undefined;
-            }
-        });
+        this.auth = _auth;
+        this.user$ = user(this.auth).pipe(map(fireUser => {
+            console.log('user change', fireUser);
+            this.user = this.fireUserToUserProfile(fireUser);
+            return fireUser;
+        }));
     }
 
     get isAuthenticated(): boolean {
         return this.user !== undefined;
     }
+
+    get userAvatarSrc():string{
+        return 'data:image/svg+xml;utf8,' + this.user?.avatarSrc;
+    }
+
 
     logout() {
         this.auth.signOut()
@@ -42,8 +44,25 @@ export class AuthService {
             });
     }
 
+    /**
+     * Map Fire User to Bogglenc UserProfile
+     * @param user
+     * @private
+     */
+    private fireUserToUserProfile(user: User | null) {
+        if (!user) {
+            return undefined;
+        }
+
+        return {
+            uid: user.uid,
+            avatarSrc: encodeURIComponent(minidenticon(user!.uid))
+        } as UserProfile;
+    }
 }
 
 export class UserProfile {
     name!: string;
+    uid!: string;
+    avatarSrc!: string;
 }

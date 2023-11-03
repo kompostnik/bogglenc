@@ -30,6 +30,10 @@ const routes: Routes = [
     {
         path: 'auth',
         component: AuthComponent
+    },
+    {
+        path: 'auth/:redirect',
+        component: AuthComponent
     }
 ];
 

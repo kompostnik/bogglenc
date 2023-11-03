@@ -1,24 +1,33 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject, catchError, delay, Observable, of, Subscription, throwError } from 'rxjs';
 import { AuthService, UserProfile } from '../../services/auth.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-profile',
     templateUrl: './profile.component.html',
-    styleUrls: ['./profile.component.scss']
+    styleUrls: ['./profile.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfileComponent implements OnInit, OnDestroy {
 
     userProfile!: UserProfile | undefined;
     profileId?: string | null;
-    inProgress: boolean = false;
+    inProgress$ = new BehaviorSubject<boolean>(false);
+    inProgressUsernameSubmit$ = new BehaviorSubject<boolean>(false);
+    showUsernameForm: boolean = false;
+    usernameInput!: string;
     private userSubscription!: Subscription;
+    usernameInputError!: string | undefined;
 
-    constructor(public authService: AuthService, private route: ActivatedRoute, private cdr: ChangeDetectorRef) {}
+    constructor(public authService: AuthService,
+                private route: ActivatedRoute,
+                private router: Router,
+                private cdr: ChangeDetectorRef) {}
 
     ngOnInit(): void {
-        this.inProgress = true;
+        this.inProgress$.next(true);
         this.profileId = this.route.snapshot.paramMap.get('id');
         if (this.profileId) {
             // fetch profile
@@ -28,27 +37,114 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
     }
 
-    actionLogout() {
+    uiActionLogout() {
         this.userProfile = undefined;
         this.authService.logout();
+        this.router.navigate(['']);
     }
 
     ngOnDestroy(): void {
-        this.userSubscription.unsubscribe();
+        if (this.userSubscription) {
+            this.userSubscription.unsubscribe();
+        }
     }
 
-    private loadOtherUserProfile() {
-        this.inProgress = false;
+    /**
+     * Check if user's username exists, if not prompt for one.
+     */
+    checkUsername() {
+        const uid = this.authService.user?.uid;
+        if (this.authService.user?.uid) {
+            const checkBackendForUsername: Observable<Response> = of(
+                {
+                    status: 404
+                } as Response)
+                .pipe(
+                    delay(500),
+                    catchError((err: HttpErrorResponse, caught) => {
+                        if (err.status === 404) {
+                            this.showUsernameForm = true;
+                        }
+
+                        this.inProgress$.next(false);
+                        this.cdr.detectChanges()
+                        return throwError(() => err);
+                    })
+                );
+
+            checkBackendForUsername.subscribe(value => {
+                if (value.status === 404) {
+                    this.showUsernameForm = true;
+                }
+
+                this.inProgress$.next(false);
+                this.cdr.detectChanges()
+            });
+        }
     }
 
-    private loadCurrentUserProfile() {
-        this.userSubscription = this.authService.user$.subscribe(value => {
-            if (this.authService.isAuthenticated) {
-                this.userProfile = { name: this.authService.user?.name } as UserProfile;
+    uiActionSubmitUsername() {
+        this.usernameInputError = undefined;
+        if(!this.usernameInput || this.usernameInput.trim().length < 1){
+            this.usernameInputError = 'Polje je obvezno';
+        } else if(this.usernameInput.length > 25) {
+            this.usernameInputError = 'Polje ne sme presegati 25 znakov';
+        }
+
+        if(this.usernameInputError){
+            return;
+        }
+
+        this.inProgressUsernameSubmit$.next(true);
+        const checkBackendForUsername: Observable<Response> = of(
+            {
+                status: this.usernameInput === '409' ? 409 : 200
+            } as Response)
+            .pipe(
+                delay(500),
+                catchError((err: HttpErrorResponse, caught) => {
+                    if (err.status === 409) {
+                        this.usernameInputError = 'Uporabniško ime je že zasedeno';
+                        this.cdr.detectChanges()
+                    }
+                    this.inProgressUsernameSubmit$.next(false);
+                    return throwError(() => err);
+                })
+            );
+
+        checkBackendForUsername.subscribe(value => {
+            if (value.status === 409) {
+                this.usernameInputError = 'Uporabniško ime je že zasedeno';
+                this.cdr.detectChanges()
+            } else {
+                this.authService.user!.name = this.usernameInput;
+                this.showUsernameForm = false;
+                this.loadCurrentUserProfile()
             }
-            this.inProgress = false;
-            this.cdr.detectChanges();
+            this.inProgressUsernameSubmit$.next(false);
         });
     }
 
+    private loadOtherUserProfile() {
+        this.inProgress$.next(false);
+    }
+
+    private loadCurrentUserProfile() {
+        if (this.authService.isAuthenticated) {
+            if(!this.authService.user?.name){
+                this.checkUsername();
+            } else {
+                this.userProfile = JSON.parse(JSON.stringify(this.authService.user)) as UserProfile;
+                this.inProgress$.next(false);
+                this.cdr.detectChanges();
+            }
+        } else {
+            this.inProgress$.next(false);
+            this.cdr.detectChanges();
+        }
+    }
+
+    calculateWordScore(s: string) : string{
+        return 'todo'
+    }
 }

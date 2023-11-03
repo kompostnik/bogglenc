@@ -2,25 +2,39 @@
     <div class="container-small">
         <div *ngIf="inProgress" class="spinner-border spinner-border-sm" role="status"></div>
 
-        <table class="table table-striped" *ngIf="!inProgress">
+        <table *ngIf="!inProgress" class="table table-striped">
             <thead>
-            <th class="col-2">Rank</th>
-            <th class="col-6">Igralec</th>
-            <th class="col-2">Točke</th>
+                <th class="col-1">Rank</th>
+                <th class="col" colspan="2">Igralec</th>
+                <th class="col-3">
+                    <i class="bi bi-record-circle me-1"></i>
+                    Točke
+                </th>
             </thead>
             <tbody>
                 <tr
+                    (click)="uiActionNavigateToProfile(game.name)"
                     *ngFor="let game of games; let index = index"
                     [class.bg-primary]="isCurrentGame(game)"
                     [class.text-white]="isCurrentGame(game)"
                     [class.victory]="isCurrentGame(game)"
-                    id="{{index}}">
-                <td>{{index + 1}}</td>
-                <td>
-                    <span class="text-uppercase">{{game.name}}</span>
-                </td>
-                <td>{{game.score}}</td>
-            </tr>
+                    id="{{index}}"
+                >
+                    <td>{{index + 1}}</td>
+                    <td>
+                        <img
+                            *ngIf="authService.isAuthenticated"
+                            class="border border-1 rounded-3"
+                            height="50"
+                            src="{{authService.userAvatarSrc}}"
+                        />
+                    </td>
+                    <td>
+                        <a class="text-uppercase" [routerLink]="['../profile', game.name]">{{game.name}}</a>
+                    </td>
+                    <td>
+                        {{game.score}}</td>
+                </tr>
             </tbody>
         </table>
     </div>

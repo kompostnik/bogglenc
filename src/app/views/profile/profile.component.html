@@ -15,7 +15,7 @@
                 Za ogled profila se moraš prijavit.
             </p>
             <p class="alert alert-info"  *ngIf="showUsernameForm">
-                Potrebuješ samo še uporabniško ime, ki bo vidno ostalim igralcem
+                Potrebuješ samo še vzdevek, ki bo viden ostalim igralcem
             </p>
         </div>
     </div>
@@ -56,7 +56,7 @@
             <img [src]="authService.user?.avatarSrc" *ngIf="authService.isAuthenticated" class="border border-5 rounded-3" height="100"/>
         </div>
         <div class="col">
-            <h5>Uporabniško ime</h5>
+            <h5>Vzdevek</h5>
             <span class="text-uppercase">{{userProfile.name}}</span>
         </div>
     </div>

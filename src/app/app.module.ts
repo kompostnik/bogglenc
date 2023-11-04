@@ -13,7 +13,6 @@ import { InventoryComponent } from './components/inventory/inventory.component';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { MenuComponent } from './components/menu/menu.component';
 import { LeaderBoardComponent } from './components/leader-board/leader-board.component';
-import { LeaderBoardFormComponent } from './components/leader-board-form/leader-board-form.component';
 import { LeaderBoardModalComponent } from './components/leader-board-modal/leader-board-modal.component';
 import { MainMenuComponent } from './views/main-menu/main-menu.component';
 import { VictoryConfettiComponent } from './components/victory-confetti/victory-confetti.component';
@@ -77,7 +76,6 @@ export function authInitializer(authService: AuthService) {
         InventoryComponent,
         MenuComponent,
         LeaderBoardComponent,
-        LeaderBoardFormComponent,
         LeaderBoardModalComponent,
         MainMenuComponent,
         VictoryConfettiComponent,

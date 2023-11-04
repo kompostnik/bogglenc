@@ -12,7 +12,8 @@ import { HttpClient } from '@angular/common/http';
 import { BoggleLetter, GameService } from '../../services/game.service';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BackendService } from '../../services/backend.service';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { GameState } from '../../views/game/game.component';
 
 @Component({
     selector: 'app-board',
@@ -23,6 +24,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 export class BoardComponent implements OnInit, OnDestroy {
 
     wordInvalid = false;
+    gameOver = false;
     flipCards: number[] = [];
 
     @Input()
@@ -32,21 +34,27 @@ export class BoardComponent implements OnInit, OnDestroy {
     inProgress$!: BehaviorSubject<boolean>;
 
     @Input()
+    gameState$!: BehaviorSubject<GameState | undefined>;
+
+    @Input()
     lettersBag!: BoggleLetter[][];
 
     @Input()
     gameOverCondition!: number;
 
     @Input()
-    timeProgress$!: BehaviorSubject<number>;
+    timeProgress!: number;
 
     @Input()
     wordLengthLimit !: number;
 
     @Output()
     wordSubmitEvent = new EventEmitter<number[]>();
-
+    sameWordError = false;
+    protected readonly GameService = GameService;
     private flipTimeout!: number;
+    private wordValidSubscription!: Subscription;
+    private gameStateSubscription!: Subscription;
 
     constructor(private httpClient: HttpClient,
                 public gameService: GameService,
@@ -56,8 +64,35 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     }
 
+    get selectedLettersAsWord() {
+        const selectedLetters = this.gameService.boardBag
+            .filter(letter => {
+                return letter.selected;
+            });
+        selectedLetters.sort((a, b) => a.selectedIndex - b.selectedIndex);
+        const selectedLetterChars = selectedLetters.map(letter => {
+            return letter.char;
+        });
+
+        return selectedLetterChars.join('');
+    }
+
+    get besedWord(): string {
+        const leftWordsToGuess = GameService.GAME_WORDS_LIMIT - (this.gameService.guessedWords?.length ?? 0);
+        if (leftWordsToGuess === 4 || leftWordsToGuess === 3) {
+            return `${leftWordsToGuess} besede`;
+        } else if (leftWordsToGuess === 2) {
+            return `${leftWordsToGuess} besedi`;
+        } else if (leftWordsToGuess === 1) {
+            return `${leftWordsToGuess} besedo`;
+        } else {
+            return `${leftWordsToGuess} besed`;
+        }
+    }
+
     selectCell(row: number, index: number) {
         this.wordInvalid = false;
+        this.sameWordError = false;
 
         let cell = this.lettersBag[row][index];
 
@@ -66,6 +101,7 @@ export class BoardComponent implements OnInit, OnDestroy {
             // unselect
             cell.selected = false;
             cell.selectedIndex = 0;
+            this.checkForAlreadyGuessedWord();
             return;
         }
 
@@ -83,6 +119,8 @@ export class BoardComponent implements OnInit, OnDestroy {
         cell.selected = true;
 
         this.gameService.persistGameData();
+
+        this.checkForAlreadyGuessedWord();
     }
 
     calculateLettersValue(word: string): number {
@@ -99,9 +137,9 @@ export class BoardComponent implements OnInit, OnDestroy {
     calculateWordLengthValue(word: string) {
         let score = 0;
         if (word.length >= 4) {
-            score += Math.pow(2, word.length - 4)
+            score += Math.pow(2, word.length - 4);
         }
-        return score
+        return score;
     }
 
     submit() {
@@ -127,17 +165,27 @@ export class BoardComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.wordValid$.subscribe(value => {
+        this.wordValidSubscription = this.wordValid$.subscribe(value => {
             if (value) {
                 this.wordCorrect();
             } else {
                 this.wordIncorrect();
             }
-        })
+        });
+
+        this.gameStateSubscription = this.gameState$.subscribe(gameState => {
+            this.gameOver = gameState === GameState.GAME_OVER;
+        });
     }
 
     ngOnDestroy(): void {
         clearTimeout(this.flipTimeout);
+        if (this.wordValidSubscription) {
+            this.wordValidSubscription.unsubscribe();
+        }
+        if (this.gameStateSubscription) {
+            this.gameStateSubscription.unsubscribe();
+        }
     }
 
     private wordIncorrect() {
@@ -154,7 +202,37 @@ export class BoardComponent implements OnInit, OnDestroy {
             this.flipCards = [];
         }, 1000);
 
-        this.wordInvalid = false
+        this.wordInvalid = false;
         this.cdr.markForCheck();
+    }
+
+    private checkForAlreadyGuessedWord() {
+        const selectedWord = this.selectedLettersAsWord;
+        if (selectedWord && this.gameService.guessedWords) {
+            const wordsWithSameStart = this.gameService.guessedWords!.filter(word => {
+                return word.startsWith(selectedWord);
+            });
+            const sameWords = wordsWithSameStart.filter(word => {
+                return word === selectedWord;
+            });
+            if (sameWords && sameWords.length > 0) {
+                // same word was already guessed
+                this.sameWordError = true;
+                this.cdr.detectChanges();
+            }
+            // const toBeSameWords = wordsWithSameStart.filter(word => {
+            //     return word.length === (selectedWord.length + 1);
+            // });
+            // indicate characters which will cause already guessed word
+            // toBeSameWords.forEach(toBeSameWord => {
+            //     const characterInWarning = toBeSameWord.charAt(toBeSameWord.length - 1);
+            //     this.gameService.boardBag
+            //         .forEach(letter => {
+            //             if (letter.char === characterInWarning) {
+            //                 letter.inWarning = true;
+            //             }
+            //         });
+            // });
+        }
     }
 }

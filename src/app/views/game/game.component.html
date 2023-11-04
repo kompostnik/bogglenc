@@ -22,8 +22,9 @@
                    [gameOverCondition]="gameOverConditionInSeconds"
                    [wordLengthLimit]="wordLengthLimit"
                    [inProgress$]="inProgress$"
+                   [gameState$]="gameState$"
                    [lettersBag]="gameService.gameData!.lettersBag"
-                   [timeProgress$]="timeProgress$"
+                   [timeProgress]="gameService.gameData!.timerProgress"
                    [wordValid$]="wordValid$"
         ></app-board>
     </div>

@@ -17,10 +17,12 @@ export class AuthService {
     user$!: Observable<User | null>;
 
     constructor(private readonly _auth: Auth) {
+        console.log('AuthService constructed')
         this.auth = _auth;
         this.user$ = user(this.auth).pipe(map(fireUser => {
-            console.log('user change', fireUser);
+            console.log('fire user', fireUser);
             this.user = this.fireUserToUserProfile(fireUser);
+            console.log('user profile', this.user)
             return fireUser;
         }));
     }
@@ -28,11 +30,6 @@ export class AuthService {
     get isAuthenticated(): boolean {
         return this.user !== undefined;
     }
-
-    get userAvatarSrc():string{
-        return 'data:image/svg+xml;utf8,' + this.user?.avatarSrc;
-    }
-
 
     logout() {
         this.auth.signOut()
@@ -53,10 +50,9 @@ export class AuthService {
         if (!user) {
             return undefined;
         }
-
         return {
             uid: user.uid,
-            avatarSrc: encodeURIComponent(minidenticon(user!.uid))
+            avatarSrc: 'data:image/svg+xml;utf8,' + encodeURIComponent(minidenticon(user!.uid))
         } as UserProfile;
     }
 }

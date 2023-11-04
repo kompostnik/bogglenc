@@ -70,8 +70,10 @@
                             <i class="bi bi-record-circle me-1"></i>
                             Točke
                         </th>
-                        <th><i class="bi bi-calendar"></i>
-                            Datum</th>
+                        <th>
+                            <i class="bi bi-cup-straw"></i>
+                            Št. Besed
+                        </th>
                         <th>
                             <i class="bi bi-book"></i>
                             Top Beseda
@@ -79,14 +81,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>5000</td>
-                        <td>12.12.1900</td>
+                    <tr *ngFor="let game of games; let index = index">
+                        <td>{{game.score}}</td>
+                        <td>{{game.wordCount}}</td>
                         <td>
-                            <a class="d-inline-block p-1 me-1" href="https://fran.si/iskanje?View=1&Query={{'direndaj'}}"
+                            <a class="d-inline-block p-1 me-1" href="https://fran.si/iskanje?View=1&Query={{game.topWord}}"
                                target="_blank">
-                                {{'direndaj'}}
-                            </a><span class="top-word-score">(<i class="bi bi-record-circle me-1"></i> {{calculateWordScore('direndaj')}})</span>
+                                {{game.topWord}}
+                            </a><span class="top-word-score">(<i class="bi bi-record-circle me-1"></i> {{game.topWordScore}})</span>
                         </td>
                     </tr>
                 </tbody>

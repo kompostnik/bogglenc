@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 
-import { AuthService, UserProfile } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 import { authState, getAuth } from '@angular/fire/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -36,11 +36,6 @@ export class AuthComponent implements OnDestroy, OnInit {
         this.authStateSubscription = this.authState$.subscribe((aUser) => {
             //handle auth state changes here. Note, that user will be null if there is no currently logged in user.
             if (aUser) {
-                this.authService.user = {
-                    name: aUser?.displayName,
-                    uid: aUser?.uid
-                } as UserProfile;
-
                 this.handleSignedInUser();
             }
         });

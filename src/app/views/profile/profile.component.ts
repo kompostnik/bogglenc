@@ -84,11 +84,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     uiActionSubmitUsername() {
+        const maxLength = 16;
         this.usernameInputError = undefined;
         if(!this.usernameInput || this.usernameInput.trim().length < 1){
             this.usernameInputError = 'Polje je obvezno';
-        } else if(this.usernameInput.length > 25) {
-            this.usernameInputError = 'Polje ne sme presegati 25 znakov';
+        } else if(this.usernameInput.length > maxLength) {
+            this.usernameInputError = `Polje ne sme presegati ${maxLength} znakov`;
         }
 
         if(this.usernameInputError){

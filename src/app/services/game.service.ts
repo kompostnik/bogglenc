@@ -6,6 +6,7 @@ export interface BoggleLetter extends Letter {
     selected: boolean
     selectedIndex: number
     boardIndex: number
+    inWarning: boolean
 }
 
 export interface GameSettings {
@@ -91,7 +92,7 @@ export class GameService {
         return this.gameData?.game.score;
     }
 
-    get guessedWords() {
+    get guessedWords(): string[] | undefined {
         return this.gameData?.guessedWords;
     }
 
@@ -174,7 +175,8 @@ export class GameService {
                 ...{
                     selected: false,
                     selectedIndex: 0,
-                    boardIndex: index
+                    boardIndex: index,
+                    inWarning: false
                 }}
         });
 

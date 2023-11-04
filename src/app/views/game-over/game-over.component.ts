@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { BsModalService } from 'ngx-bootstrap/modal';
-import { LeaderBoardFormComponent } from '../../components/leader-board-form/leader-board-form.component';
 import { Router } from '@angular/router';
 import { AchievementsComponent } from '../../components/achievements/achievements.component';
 import { AuthService } from '../../services/auth.service';
@@ -38,14 +37,6 @@ export class GameOverComponent implements OnInit {
         return this.gameService!.guessedWords!.length >= GameService.GAME_WORDS_LIMIT;
     }
 
-    actionOpenLeaderBoardForm() {
-        this.modalService.show(LeaderBoardFormComponent)
-    }
-
-    actionBackToMainMenu() {
-        this.router.navigate([''], {skipLocationChange: true})
-    }
-
     actionOpenAchievementsModal() {
         this.modalService.show(AchievementsComponent, {class: 'modal-lg'})
     }
@@ -72,7 +63,6 @@ export class GameOverComponent implements OnInit {
     }
 
     ngOnInit(): void {
-
         this.submitScoreToLeaderboard();
     }
 }

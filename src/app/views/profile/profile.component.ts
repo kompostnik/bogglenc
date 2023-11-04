@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, catchError, delay, Observable, of, Subscription, throwError } from 'rxjs';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { BackendService, Game } from '../../services/backend.service';
 
 @Component({
     selector: 'app-profile',
@@ -20,10 +21,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     usernameInput!: string;
     private userSubscription!: Subscription;
     usernameInputError!: string | undefined;
+    games: Game[] = [];
 
     constructor(public authService: AuthService,
                 private route: ActivatedRoute,
                 private router: Router,
+                public backendService: BackendService,
                 private cdr: ChangeDetectorRef) {}
 
     ngOnInit(): void {
@@ -136,13 +139,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this.checkUsername();
             } else {
                 this.userProfile = JSON.parse(JSON.stringify(this.authService.user)) as UserProfile;
-                this.inProgress$.next(false);
-                this.cdr.detectChanges();
+                this.fetchLeaderBoard()
             }
         } else {
             this.inProgress$.next(false);
             this.cdr.detectChanges();
         }
+    }
+
+    private fetchLeaderBoard() {
+        this.backendService.getLeaderBoard()
+            .pipe(
+                catchError(err => {
+                    console.log('Handling error locally and rethrowing it...', err);
+                    this.inProgress$.next(false);
+                    this.cdr.detectChanges();
+                    return throwError(err);
+                })
+            )
+            .subscribe(data => {
+                this.games = data.filter(game => {
+                    return game.name === this.authService.user?.name
+                }) as any[];
+                this.inProgress$.next(false);
+                this.cdr.detectChanges();
+            })
     }
 
     calculateWordScore(s: string) : string{

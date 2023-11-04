@@ -45,6 +45,8 @@ export interface Game {
   startedAt: number;
   endedAt: number | null;
   endedAndNamed: boolean;
+  topWord: string | null;
+  topWordScore: number;
 }
 
 export interface CheckWordResult {
@@ -121,6 +123,8 @@ export function startGame(): Promise<Game> {
     startedAt: new Date().getTime(),
     endedAt: null,
     endedAndNamed: false,
+    topWord: null,
+    topWordScore: 0
   };
   return db
     .collection('games')
@@ -183,6 +187,10 @@ export async function guessTheWord(
   const scoreForWord = scoreForLetters + scoreForLength;
   game.score += scoreForWord;
   game.wordCount = game.wordCount + 1;
+  if(game.topWordScore < scoreForWord){
+    game.topWordScore = scoreForWord;
+    game.topWord = wordString;
+  }
   replaceLetters(game.board, letterIndexes);
   if (game.wordCount >= MAX_WORDS_PER_GAME) {
     game.endedAt = new Date().getTime();

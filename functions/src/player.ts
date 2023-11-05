@@ -1,7 +1,10 @@
 import { db } from './admin';
+import { Game, GameEntity } from './game';
+import { entityToGame, entityToPlayerProfile } from './mappers';
 
 export interface PlayerProfile {
   nickname: string;
+  topGame?: Game;
 }
 
 export interface PlayerProfileEntity extends PlayerProfile {
@@ -17,7 +20,7 @@ export async function readProfile(
 ): Promise<PlayerProfile | null> {
   const playerProfileEntity = await readProfileEntity(nickname);
   return playerProfileEntity
-    ? { nickname: playerProfileEntity.nickname }
+    ? entityToPlayerProfile(playerProfileEntity)
     : null;
 }
 
@@ -40,13 +43,19 @@ export async function readProfileEntity(
 export async function readProfileByUid(
   uid: string,
 ): Promise<PlayerProfile | null> {
+  const playerProfileEntity = await readProfileEntityByUid(uid);
+  return playerProfileEntity
+    ? entityToPlayerProfile(playerProfileEntity)
+    : null;
+}
+
+export async function readProfileEntityByUid(
+  uid: string,
+): Promise<PlayerProfileEntity | null> {
   const playerProfileEntity: PlayerProfileEntity = (
     await db.collection('players').doc(uid).get()
   ).data() as PlayerProfileEntity;
-
-  return playerProfileEntity
-    ? { nickname: playerProfileEntity.nickname }
-    : null;
+  return playerProfileEntity ?? null;
 }
 
 export async function submitProfile(
@@ -74,15 +83,50 @@ export async function submitProfile(
     throw ERR_NICKNAME_TAKEN;
   }
 
-  const playerProfileEntity: PlayerProfileEntity = {
-    uid,
-    nickname: nicknameTrimmed,
-    nicknameLowercase,
-  };
+  const existingPlayerProfileEntity = (
+    await db.collection('players').doc(uid).get()
+  )?.data() as PlayerProfileEntity;
+
+  let playerProfileEntity: PlayerProfileEntity;
+  if (existingPlayerProfileEntity) {
+    playerProfileEntity = {
+      ...existingPlayerProfileEntity,
+      nickname: nicknameTrimmed,
+      nicknameLowercase,
+    };
+  } else {
+    playerProfileEntity = {
+      uid,
+      nickname: nicknameTrimmed,
+      nicknameLowercase,
+    };
+  }
 
   await db.collection('players').doc(uid).set(playerProfileEntity);
 
-  return {
-    nickname: nicknameTrimmed,
-  };
+  return entityToPlayerProfile(playerProfileEntity);
+}
+
+export async function updateTopGame(game: GameEntity): Promise<PlayerProfile> {
+  if (!game.playerUid) {
+    throw new Error('Game has no playerUid!');
+  }
+
+  const playerProfileEntity = await readProfileEntityByUid(game.playerUid);
+  if (!playerProfileEntity) {
+    throw new Error('Player not found!');
+  }
+
+  if (
+    !playerProfileEntity.topGame ||
+    game.score > playerProfileEntity.topGame.score
+  ) {
+    playerProfileEntity.topGame = entityToGame(game);
+    await db
+      .collection('players')
+      .doc(playerProfileEntity.uid)
+      .set(playerProfileEntity);
+  }
+
+  return entityToPlayerProfile(playerProfileEntity);
 }

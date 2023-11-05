@@ -123,6 +123,10 @@ describe('game tests', () => {
       expect(item.endedAt).to.be.a('number');
       expect(item.endedAndNamed).to.be.true;
     });
+
+    const playerProfile = await playerService.readProfile(playerName);
+    expect(playerProfile?.topGame?.id).to.equal(game.id);
+    expect(playerProfile?.topGame?.score).to.equal(endedGame.score);
   });
 });
 

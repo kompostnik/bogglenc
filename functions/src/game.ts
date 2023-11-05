@@ -49,6 +49,7 @@ export interface Game {
   topWord: string | null;
   topWordScore: number;
   words: PlayedWord[];
+  assignedToPlayer: boolean;
 }
 
 export interface GameEntity extends Game {
@@ -135,6 +136,7 @@ export function startGame(): Promise<Game> {
     topWordScore: 0,
     playerUid: null,
     words: [],
+    assignedToPlayer: false,
   };
   return db
     .collection('games')
@@ -427,5 +429,6 @@ function entityToGame(gameEntity: GameEntity): Game {
   return {
     ...gameEntity,
     playerUid: undefined,
+    assignedToPlayer: !!gameEntity.playerUid,
   } as Game;
 }

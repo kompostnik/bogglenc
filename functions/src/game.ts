@@ -2,6 +2,7 @@ import { db } from './admin';
 import * as crypto from 'crypto';
 import { dictionary } from './dictionary';
 import * as playerService from './player';
+import { entityToGame } from './mappers';
 
 type LetterChar =
   | 'a'
@@ -212,6 +213,7 @@ export async function guessTheWord(
     game.leaderboardRank = await getLeaderboardRank(game.score);
     if (game?.name?.length) {
       game.endedAndNamed = true;
+      await playerService.updateTopGame(game);
     }
   }
 
@@ -248,6 +250,7 @@ export async function gameOver(gameId: string): Promise<Game> {
   game.leaderboardRank = await getLeaderboardRank(game.score);
   if (game.name?.length) {
     game.endedAndNamed = true;
+    await playerService.updateTopGame(game);
   }
   await gameDoc.ref.set(game);
 
@@ -279,10 +282,13 @@ export async function assignToPlayer(
   if (!player) {
     throw new Error('Player not found!');
   }
+
   game.name = player.nickname;
+  game.playerUid = playerUid;
 
   if (game.endedAt) {
     game.endedAndNamed = true;
+    await playerService.updateTopGame(game);
   }
   await gameDoc.ref.set(game);
 
@@ -423,12 +429,4 @@ function getLeaderboardRank(score: number): Promise<number> {
     .count()
     .get()
     .then((querySnapshot) => querySnapshot.data().count + 1);
-}
-
-function entityToGame(gameEntity: GameEntity): Game {
-  return {
-    ...gameEntity,
-    playerUid: undefined,
-    assignedToPlayer: !!gameEntity.playerUid,
-  } as Game;
 }

@@ -2,7 +2,10 @@ import { db } from './admin';
 import * as crypto from 'crypto';
 import { dictionary } from './dictionary';
 import * as playerService from './player';
+import { PlayerProfileEntity } from './player';
 import { entityToGame } from './mappers';
+import { firestore } from 'firebase-admin';
+import FieldPath = firestore.FieldPath;
 
 type LetterChar =
   | 'a'
@@ -117,6 +120,7 @@ const SCORE_BY_LENGTH: { [key: number]: number } = {
 const BOARD_SIZE = 16;
 const MIN_WORD_LENGTH = 3;
 const LEADERBOARD_ENTRIES_LIMIT = 50;
+const PLAYER_LEADERBOARD_ENTRIES_LIMIT = 10;
 const MIN_UNIQUE_LETTERS_PER_BOARD = 12;
 const MAX_WORDS_PER_GAME = 100;
 const VOWELS: LetterChar[] = ['a', 'e', 'i', 'o', 'u', 'r'];
@@ -296,12 +300,36 @@ export async function assignToPlayer(
 }
 
 export function getLeaderboard(): Promise<Game[]> {
+  const fieldPath = new FieldPath('topGame', 'score');
+  return db
+    .collection('players')
+    .orderBy(fieldPath, 'desc')
+    .limit(LEADERBOARD_ENTRIES_LIMIT)
+    .get()
+    .then((querySnapshot) => {
+      const games: Game[] = [];
+      querySnapshot.forEach((doc) => {
+        const playerProfileEntity = doc.data() as PlayerProfileEntity;
+        games.push(playerProfileEntity.topGame!);
+      });
+      return games;
+    });
+}
+
+export async function getPlayerLeaderboard(nickname: string): Promise<Game[]> {
+  const playerProfile = await playerService.readProfileEntity(nickname);
+
+  if (!playerProfile) {
+    throw new Error('Player not found!');
+  }
+
   return db
     .collection('games')
     .where('endedAndNamed', '==', true)
+    .where('playerUid', '==', playerProfile.uid)
     .orderBy('score', 'desc')
     .orderBy('endedAt', 'asc')
-    .limit(LEADERBOARD_ENTRIES_LIMIT)
+    .limit(PLAYER_LEADERBOARD_ENTRIES_LIMIT)
     .get()
     .then((querySnapshot) => {
       const games: Game[] = [];

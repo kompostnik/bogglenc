@@ -128,6 +128,28 @@ describe('game tests', () => {
     expect(playerProfile?.topGame?.id).to.equal(game.id);
     expect(playerProfile?.topGame?.score).to.equal(endedGame.score);
   });
+
+  it('getPlayerLeaderboard', async () => {
+    // Arrange
+    const game = await gameFunctions.startGame();
+    const [_, letterIndexes] = await mockWord(game);
+    await gameFunctions.guessTheWord(game.id, letterIndexes);
+    const endedGame = await gameFunctions.gameOver(game.id);
+
+    const playerUid = crypto.randomUUID().slice(-6);
+    const playerName = `Testko_${playerUid}`;
+    await playerService.submitProfile(playerUid, playerName);
+    await gameFunctions.assignToPlayer(game.id, playerUid);
+
+    // Act
+    const leaderboard = await gameFunctions.getPlayerLeaderboard(playerName);
+
+    // Assert
+    expect(leaderboard.length).to.be.equal(1);
+    const leaderboardEntry = leaderboard[0];
+    expect(leaderboardEntry?.name).to.equal(playerName);
+    expect(leaderboardEntry?.score).to.equal(endedGame.score);
+  });
 });
 
 /**

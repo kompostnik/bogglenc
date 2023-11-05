@@ -189,3 +189,29 @@ export const assignGameToPlayer = functions
       res.status(200).send(result);
     });
   });
+
+/**
+ * Lists player's 10 best games.
+ * Use POST or PUT.
+ * Expected request body:
+ * <pre>
+ * { nickname: string; }
+ * </pre>
+ *
+ * @returns {Game[]}
+ */
+export const getPlayerLeaderboard = functions
+  .region('europe-west1')
+  .https.onRequest((req, res) => {
+    cors()(req, res, async () => {
+      const requestData = req.body as {
+        nickname: string;
+      };
+
+      const result = await gameService.getPlayerLeaderboard(
+        requestData.nickname,
+      );
+
+      res.status(200).send(result);
+    });
+  });

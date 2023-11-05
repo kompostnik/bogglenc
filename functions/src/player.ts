@@ -94,6 +94,7 @@ export async function submitProfile(
       nickname: nicknameTrimmed,
       nicknameLowercase,
     };
+    // TODO update names in all player's games
   } else {
     playerProfileEntity = {
       uid,

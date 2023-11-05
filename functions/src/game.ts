@@ -1,6 +1,7 @@
 import { db } from './admin';
 import * as crypto from 'crypto';
 import { dictionary } from './dictionary';
+import * as playerService from './player';
 
 type LetterChar =
   | 'a'
@@ -47,14 +48,22 @@ export interface Game {
   endedAndNamed: boolean;
   topWord: string | null;
   topWordScore: number;
+  words: PlayedWord[];
 }
 
-export interface CheckWordResult {
+export interface GameEntity extends Game {
+  playerUid: string | null;
+}
+
+export interface PlayedWord {
   word: string;
   correct: boolean;
   scoreForWord: number;
   scoreForLetters: number;
   scoreForLength: number;
+}
+
+export interface CheckWordResult extends PlayedWord {
   game: Game;
 }
 
@@ -108,12 +117,11 @@ const MIN_WORD_LENGTH = 3;
 const LEADERBOARD_ENTRIES_LIMIT = 50;
 const MIN_UNIQUE_LETTERS_PER_BOARD = 12;
 const MAX_WORDS_PER_GAME = 100;
-const MAX_NAME_LENGTH = 16;
 const VOWELS: LetterChar[] = ['a', 'e', 'i', 'o', 'u', 'r'];
 const LETTER_R = LETTERS.find((letter) => letter.char === 'r')!;
 
 export function startGame(): Promise<Game> {
-  const game: Game = {
+  const gameEntity: GameEntity = {
     id: crypto.randomUUID(),
     board: generateRandomBoard(),
     score: 0,
@@ -125,12 +133,14 @@ export function startGame(): Promise<Game> {
     endedAndNamed: false,
     topWord: null,
     topWordScore: 0,
+    playerUid: null,
+    words: [],
   };
   return db
     .collection('games')
-    .doc(game.id)
-    .set(game)
-    .then(() => game);
+    .doc(gameEntity.id)
+    .set(gameEntity)
+    .then(() => entityToGame(gameEntity));
 }
 
 export async function guessTheWord(
@@ -160,7 +170,7 @@ export async function guessTheWord(
   if (!gameDoc.exists) {
     throw new Error('Game not found!');
   }
-  const game: Game = gameDoc.data() as Game;
+  const game: GameEntity = gameDoc.data() as GameEntity;
   if (game.endedAt) {
     throw new Error('Game has already ended!');
   }
@@ -173,14 +183,16 @@ export async function guessTheWord(
   const isWordValid = dictionary.hasWord(wordString);
 
   if (!isWordValid) {
-    return {
+    const playedWord = {
       word: wordString,
       correct: false,
       scoreForWord: 0,
       scoreForLetters: 0,
       scoreForLength: 0,
-      game,
     };
+    game.words.push(playedWord);
+    await gameDoc.ref.set(game);
+    return { ...playedWord, game: entityToGame(game) };
   }
 
   const scoreForLetters = getScoreForLetters(wordString);
@@ -200,16 +212,19 @@ export async function guessTheWord(
       game.endedAndNamed = true;
     }
   }
-  await gameDoc.ref.set(game);
 
-  return {
+  const playedWord = {
     word: wordString,
     correct: true,
     scoreForWord,
     scoreForLetters,
     scoreForLength,
-    game,
   };
+
+  game.words.push(playedWord);
+  await gameDoc.ref.set(game);
+
+  return { ...playedWord, game: entityToGame(game) };
 }
 
 export async function gameOver(gameId: string): Promise<Game> {
@@ -222,7 +237,7 @@ export async function gameOver(gameId: string): Promise<Game> {
     throw new Error('Game not found!');
   }
 
-  const game: Game = gameDoc.data() as Game;
+  const game: GameEntity = gameDoc.data() as GameEntity;
   if (game.endedAt) {
     throw new Error('Game has already ended!');
   }
@@ -234,18 +249,18 @@ export async function gameOver(gameId: string): Promise<Game> {
   }
   await gameDoc.ref.set(game);
 
-  return game;
+  return entityToGame(game);
 }
 
-export async function submitName(gameId: string, name: string): Promise<Game> {
+export async function assignToPlayer(
+  gameId: string,
+  playerUid: string,
+): Promise<Game> {
   if (!gameId?.length) {
     throw new Error('Missing gameId!');
   }
-  if (!name?.trim().length) {
-    throw new Error('Missing name!');
-  }
-  if (name.length > MAX_NAME_LENGTH) {
-    throw new Error('Name is too long!');
+  if (!playerUid?.trim().length) {
+    throw new Error('Missing playerUid!');
   }
 
   const gameDoc = await db.collection('games').doc(gameId).get();
@@ -253,18 +268,23 @@ export async function submitName(gameId: string, name: string): Promise<Game> {
     throw new Error('Game not found!');
   }
 
-  const game: Game = gameDoc.data() as Game;
-  if (game.name?.length) {
-    throw new Error('Name already submitted!');
+  const game: GameEntity = gameDoc.data() as GameEntity;
+  if (game.playerUid?.length) {
+    throw new Error('Game already assigned to player');
   }
 
-  game.name = name;
+  const player = await playerService.readProfileByUid(playerUid);
+  if (!player) {
+    throw new Error('Player not found!');
+  }
+  game.name = player.nickname;
+
   if (game.endedAt) {
     game.endedAndNamed = true;
   }
   await gameDoc.ref.set(game);
 
-  return game;
+  return entityToGame(game);
 }
 
 export function getLeaderboard(): Promise<Game[]> {
@@ -278,7 +298,9 @@ export function getLeaderboard(): Promise<Game[]> {
     .then((querySnapshot) => {
       const games: Game[] = [];
       querySnapshot.forEach((doc) => {
-        games.push(doc.data() as Game);
+        const gameEntity = doc.data() as GameEntity;
+        const game = entityToGame(gameEntity);
+        games.push(game);
       });
       return games;
     });
@@ -399,4 +421,11 @@ function getLeaderboardRank(score: number): Promise<number> {
     .count()
     .get()
     .then((querySnapshot) => querySnapshot.data().count + 1);
+}
+
+function entityToGame(gameEntity: GameEntity): Game {
+  return {
+    ...gameEntity,
+    playerUid: undefined,
+  } as Game;
 }

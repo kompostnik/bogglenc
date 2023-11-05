@@ -2,10 +2,11 @@ import './test-init';
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import * as gameFunctions from '../src/game';
-import { Game } from '../src/game';
+import { Game, GameEntity } from '../src/game';
 import { db } from '../src/admin';
 import * as crypto from 'crypto';
 import { dictionary } from '../src/dictionary';
+import * as playerService from '../src/player';
 
 describe('game tests', () => {
   it('startGame', async () => {
@@ -82,12 +83,14 @@ describe('game tests', () => {
 
   it('guessTheWord game ends', async () => {
     // Arrange
-    const game = await gameFunctions.startGame().then(async (game) => {
-      game.wordCount = 99;
-      game.score = 100;
-      await db.collection('games').doc(game.id).set(game);
-      return game;
-    });
+    const game = await gameFunctions.startGame();
+    const gameEntity: GameEntity = {
+      ...game,
+      playerUid: null,
+      wordCount: 99,
+      score: 100,
+    };
+    await db.collection('games').doc(game.id).set(gameEntity);
     const [_, letterIndexes] = await mockWord(game);
 
     // Act
@@ -103,8 +106,10 @@ describe('game tests', () => {
     await gameFunctions.guessTheWord(game.id, letterIndexes);
     const endedGame = await gameFunctions.gameOver(game.id);
 
-    const playerName = `Testko ${crypto.randomUUID().slice(-6)}`;
-    await gameFunctions.submitName(game.id, playerName);
+    const playerUid = crypto.randomUUID().slice(-6);
+    const playerName = `Testko_${playerUid}`;
+    await playerService.submitProfile(playerUid, playerName);
+    await gameFunctions.assignToPlayer(game.id, playerUid);
 
     // Act
     const leaderboard = await gameFunctions.getLeaderboard();

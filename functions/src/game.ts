@@ -1,6 +1,6 @@
 import { db } from './admin';
 import * as crypto from 'crypto';
-import * as wordService from './word';
+import { dictionary } from './dictionary';
 
 type LetterChar =
   | 'a'
@@ -124,7 +124,7 @@ export function startGame(): Promise<Game> {
     endedAt: null,
     endedAndNamed: false,
     topWord: null,
-    topWordScore: 0
+    topWordScore: 0,
   };
   return db
     .collection('games')
@@ -168,10 +168,11 @@ export async function guessTheWord(
   // check if word is valid
   const wordString = letterIndexes
     .map((index) => game.board[index].char)
-    .join('');
-  const word = await wordService.checkWord(wordString);
+    .join('')
+    .toLocaleLowerCase();
+  const isWordValid = dictionary.hasWord(wordString);
 
-  if (!word) {
+  if (!isWordValid) {
     return {
       word: wordString,
       correct: false,
@@ -187,7 +188,7 @@ export async function guessTheWord(
   const scoreForWord = scoreForLetters + scoreForLength;
   game.score += scoreForWord;
   game.wordCount = game.wordCount + 1;
-  if(game.topWordScore < scoreForWord){
+  if (game.topWordScore < scoreForWord) {
     game.topWordScore = scoreForWord;
     game.topWord = wordString;
   }

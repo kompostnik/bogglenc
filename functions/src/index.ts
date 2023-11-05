@@ -1,29 +1,6 @@
 import * as functions from 'firebase-functions';
-import * as cors from 'cors';
-import * as wordService from './word';
+import cors from 'cors';
 import * as gameService from './game';
-
-/**
- * @deprecated kept to support the older version of frontend
- */
-export const wordCheck = functions
-  .region('europe-west1')
-  .https.onRequest((req, res) => {
-    cors()(req, res, async () => {
-      const wordParam = (req.query.word as string) ?? '';
-      const word = wordParam.trim().toLowerCase();
-
-      const checkedWord = await wordService.checkWord(word);
-
-      if (checkedWord) {
-        functions.logger.info(`Word is valid: ${word}`);
-        res.status(200).send(checkedWord.value);
-      } else {
-        functions.logger.info(`Word is not valid: ${word}`);
-        res.status(400).send('Wrong guess!');
-      }
-    });
-  });
 
 /**
  * Starts a new game.

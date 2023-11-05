@@ -29,6 +29,7 @@
     </div>
 
     <ng-container *ngIf="authModalState$.value === AuthModalState.MISSING_USERNAME">
+        <app-player-avatar [seed]="usernameInput"></app-player-avatar>
         <form>
             <div class="row">
                 <div class="col">

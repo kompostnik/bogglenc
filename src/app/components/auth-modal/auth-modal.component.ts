@@ -8,7 +8,7 @@ import {
     ViewChild
 } from '@angular/core';
 import { authState, getAuth } from '@angular/fire/auth';
-import { BehaviorSubject, catchError, delay, Observable, of, Subscription, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, delay, Subscription, throwError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -76,7 +76,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
             } else if (state === AuthModalState.COMPLETE) {
                 if (this.redirect) {
                     console.log('User is authenticated redirect to profile view.');
-                    this.router.navigate(['profile']);
+                    this.router.navigate(['profile', this.authService.user?.name]);
                 }
                 this.modalRef.hide();
             }
@@ -101,32 +101,28 @@ export class AuthModalComponent implements OnDestroy, OnInit {
     checkUsername() {
         this.inProgress$.next(true);
         const uid = this.authService.user?.uid;
-        if (this.authService.user?.uid) {
-            const checkBackendForUsername: Observable<Response> = of(
-                {
-                    status: 404
-                } as Response)
+        if (uid) {
+
+            this.backendService.readPlayerProfile(uid, undefined)
                 .pipe(
-                    delay(500),
                     catchError((err: HttpErrorResponse, caught) => {
                         if (err.status === 404) {
                             this.authModalState$.next(AuthModalState.MISSING_USERNAME);
                         }
 
                         this.inProgress$.next(false);
-                        this.cdr.detectChanges();
                         return throwError(() => err);
                     })
-                );
+                )
+                .subscribe(value => {
+                    if (!value) {
+                        this.authModalState$.next(AuthModalState.MISSING_USERNAME);
+                    } else {
+                        this.authModalState$.next(AuthModalState.COMPLETE);
+                    }
 
-            checkBackendForUsername.subscribe(value => {
-                if (value.status === 404) {
-                    this.authModalState$.next(AuthModalState.MISSING_USERNAME);
-                }
-
-                this.inProgress$.next(false);
-                this.cdr.detectChanges();
-            });
+                    this.inProgress$.next(false);
+                });
         }
     }
 
@@ -144,10 +140,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
         }
 
         this.inProgressUsernameSubmit$.next(true);
-        const checkBackendForUsername: Observable<Response> = of(
-            {
-                status: this.usernameInput === '409' ? 409 : 200
-            } as Response)
+        this.backendService.submitPlayerProfile(this.authService.user!.uid, this.usernameInput)
             .pipe(
                 delay(500),
                 catchError((err: HttpErrorResponse, caught) => {
@@ -158,18 +151,17 @@ export class AuthModalComponent implements OnDestroy, OnInit {
                     this.inProgressUsernameSubmit$.next(false);
                     return throwError(() => err);
                 })
-            );
-
-        checkBackendForUsername.subscribe(value => {
-            if (value.status === 409) {
-                this.usernameInputError = 'Uporabniško ime je že zasedeno';
-                this.cdr.detectChanges();
-            } else {
-                this.authService.user!.name = this.usernameInput;
-                this.authModalState$.next(AuthModalState.COMPLETE);
-            }
-            this.inProgressUsernameSubmit$.next(false);
-        });
+            )
+            .subscribe(value => {
+                if (!value) {
+                    this.usernameInputError = 'Uporabniško ime je že zasedeno';
+                    this.cdr.detectChanges();
+                } else {
+                    this.authService.user!.name = this.usernameInput;
+                    this.authModalState$.next(AuthModalState.COMPLETE);
+                }
+                this.inProgressUsernameSubmit$.next(false);
+            });
     }
 
     private authStateSubscriptionInit() {

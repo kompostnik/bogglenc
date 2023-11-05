@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Auth, User, user } from '@angular/fire/auth';
 import { defer, map, Observable } from 'rxjs';
-import { minidenticon } from 'minidenticons';
 
 /**
  * Inspired from
@@ -54,7 +53,6 @@ export class AuthService {
         }
         return {
             uid: user.uid,
-            avatarSrc: 'data:image/svg+xml;utf8,' + encodeURIComponent(minidenticon(user!.uid))
         } as UserProfile;
     }
 }
@@ -62,5 +60,4 @@ export class AuthService {
 export class UserProfile {
     name!: string;
     uid!: string;
-    avatarSrc!: string;
 }

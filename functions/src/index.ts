@@ -93,23 +93,29 @@ export const getLeaderboard = functions
  * Use POST or PUT.
  * Expected request body:
  * <pre>
- * { nickname: string; }
+ * { uid: string;  nickname: string; }
  * </pre>
  *
  * @returns {PlayerProfile}
- *  or HTTP status 409 if nickname does not exist
+ *  or HTTP status 404 if profile does not exist
  */
 export const readPlayerProfile = functions
   .region('europe-west1')
   .https.onRequest((req, res) => {
     cors()(req, res, async () => {
       const requestData = req.body as {
+        uid: string;
         nickname: string;
       };
 
       functions.logger.info('Reading player profile: ', requestData);
 
-      const result = await playerService.readProfile(requestData.nickname);
+      let result;
+      if(requestData.uid){
+        result = await playerService.readProfileByUid(requestData.uid);
+      } else {
+        result = await playerService.readProfile(requestData.nickname);
+      }
 
       if (result) {
         res.status(200).send(result);

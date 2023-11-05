@@ -30,6 +30,9 @@ import { AngularFireAuthModule } from '@angular/fire/compat/auth';
 import { AngularFireModule } from '@angular/fire/compat';
 import { AuthService } from './services/auth.service';
 import { AuthModalComponent } from './components/auth-modal/auth-modal.component';
+import { BackendService } from './services/backend.service';
+import { PlayerAvatarComponent } from './components/player-avatar/player-avatar.component';
+import { catchError, throwError } from 'rxjs';
 
 const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
     signInFlow: 'popup',
@@ -58,13 +61,25 @@ const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
     language: 'sl'
 };
 
-export function authInitializer(authService: AuthService) {
+export function authInitializer(authService: AuthService, backendService: BackendService) {
     return (): Promise<any> => {
         return new Promise(resolve => {
-            authService.user$.subscribe(value => {
-                resolve(true);
+            authService.user$.subscribe(user => {
+                if (user) {
+                    backendService.readPlayerProfile(user.uid, undefined)
+                        .pipe(catchError((err, caught) => {
+                            resolve(true);
+                            return throwError(err);
+                        }))
+                        .subscribe(value => {
+                            authService.user!.name = value.nickname;
+                            resolve(true);
+                        });
+                } else {
+                    resolve(true);
+                }
             });
-        })
+        });
     };
 }
 
@@ -86,7 +101,8 @@ export function authInitializer(authService: AuthService) {
         TimerComponent,
         BoardKeyComponent,
         ProfileComponent,
-        AuthModalComponent
+        AuthModalComponent,
+        PlayerAvatarComponent
     ],
     imports: [
         provideFirebaseApp(() => initializeApp(environment.firebase)),
@@ -120,7 +136,7 @@ export function authInitializer(authService: AuthService) {
         {
             provide: APP_INITIALIZER,
             useFactory: authInitializer,
-            deps: [AuthService],
+            deps: [AuthService, BackendService],
             multi: true
         }
     ],

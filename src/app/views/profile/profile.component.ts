@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, catchError, delay, Observable, of, Subscription, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, Subscription, throwError } from 'rxjs';
 import { AuthService, UserProfile } from '../../services/auth.service';
-import { HttpErrorResponse } from '@angular/common/http';
 import { BackendService, Game } from '../../services/backend.service';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { AuthModalComponent } from '../../components/auth-modal/auth-modal.component';
 
 @Component({
     selector: 'app-profile',
@@ -14,35 +15,28 @@ import { BackendService, Game } from '../../services/backend.service';
 export class ProfileComponent implements OnInit, OnDestroy {
 
     userProfile!: UserProfile | undefined;
-    profileId?: string | null;
+    profileId?: string | null | undefined;
     inProgress$ = new BehaviorSubject<boolean>(false);
-    inProgressUsernameSubmit$ = new BehaviorSubject<boolean>(false);
-    showUsernameForm: boolean = false;
-    usernameInput!: string;
-    usernameInputError!: string | undefined;
     games: Game[] = [];
     private userSubscription!: Subscription;
     private logoutSubscription!: Subscription;
+    myProfile: boolean = false;
 
     constructor(public authService: AuthService,
                 private route: ActivatedRoute,
                 private router: Router,
+                private modalService: BsModalService,
                 public backendService: BackendService,
                 private cdr: ChangeDetectorRef) {}
 
     ngOnInit(): void {
         this.inProgress$.next(true);
         this.profileId = this.route.snapshot.paramMap.get('id');
-        if (this.profileId) {
-            // fetch profile
-            this.loadOtherUserProfile();
-        } else {
-            this.loadCurrentUserProfile();
-        }
+        this.myProfile = this.authService.isAuthenticated && this.profileId === this.authService.user?.name
+        this.loadUserProfile();
     }
 
     uiActionLogout() {
-        console.log('uiActionLogout');
         this.userProfile = undefined;
         this.userSubscription = this.authService.user$.subscribe(value => {
             if (!value) {
@@ -62,99 +56,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Check if user's username exists, if not prompt for one.
-     */
-    checkUsername() {
-        const uid = this.authService.user?.uid;
-        if (this.authService.user?.uid) {
-            const checkBackendForUsername: Observable<Response> = of(
-                {
-                    status: 404
-                } as Response)
-                .pipe(
-                    delay(500),
-                    catchError((err: HttpErrorResponse, caught) => {
-                        if (err.status === 404) {
-                            this.showUsernameForm = true;
-                        }
+    private loadUserProfile() {
+        this.backendService.readPlayerProfile(null, this.profileId)
+            .subscribe(value => {
+                this.userProfile = {
+                    name: value.nickname
+                } as UserProfile;
 
-                        this.inProgress$.next(false);
-                        this.cdr.detectChanges();
-                        return throwError(() => err);
-                    })
-                );
-
-            checkBackendForUsername.subscribe(value => {
-                if (value.status === 404) {
-                    this.showUsernameForm = true;
-                }
-
-                this.inProgress$.next(false);
-                this.cdr.detectChanges();
-            });
-        }
-    }
-
-    uiActionSubmitUsername() {
-        const maxLength = 16;
-        this.usernameInputError = undefined;
-        if (!this.usernameInput || this.usernameInput.trim().length < 1) {
-            this.usernameInputError = 'Polje je obvezno';
-        } else if (this.usernameInput.length > maxLength) {
-            this.usernameInputError = `Polje ne sme presegati ${maxLength} znakov`;
-        }
-
-        if (this.usernameInputError) {
-            return;
-        }
-
-        this.inProgressUsernameSubmit$.next(true);
-        const checkBackendForUsername: Observable<Response> = of(
-            {
-                status: this.usernameInput === '409' ? 409 : 200
-            } as Response)
-            .pipe(
-                delay(500),
-                catchError((err: HttpErrorResponse, caught) => {
-                    if (err.status === 409) {
-                        this.usernameInputError = 'Uporabniško ime je že zasedeno';
-                        this.cdr.detectChanges();
-                    }
-                    this.inProgressUsernameSubmit$.next(false);
-                    return throwError(() => err);
-                })
-            );
-
-        checkBackendForUsername.subscribe(value => {
-            if (value.status === 409) {
-                this.usernameInputError = 'Uporabniško ime je že zasedeno';
-                this.cdr.detectChanges();
-            } else {
-                this.authService.user!.name = this.usernameInput;
-                this.showUsernameForm = false;
-                this.loadCurrentUserProfile();
-            }
-            this.inProgressUsernameSubmit$.next(false);
-        });
-    }
-
-    private loadOtherUserProfile() {
-        this.inProgress$.next(false);
-    }
-
-    private loadCurrentUserProfile() {
-        if (this.authService.isAuthenticated) {
-            if (!this.authService.user?.name) {
-                this.checkUsername();
-            } else {
-                this.userProfile = JSON.parse(JSON.stringify(this.authService.user)) as UserProfile;
                 this.fetchLeaderBoard();
-            }
-        } else {
-            this.inProgress$.next(false);
-            this.cdr.detectChanges();
-        }
+            });
     }
 
     private fetchLeaderBoard() {
@@ -174,5 +84,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this.inProgress$.next(false);
                 this.cdr.detectChanges();
             });
+    }
+
+    actionOpenLoginModal() {
+        this.modalService.show(AuthModalComponent);
     }
 }

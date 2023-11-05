@@ -4,8 +4,8 @@ import { expect } from 'chai';
 import * as gameFunctions from '../src/game';
 import { Game } from '../src/game';
 import { db } from '../src/admin';
-import { useFran } from '../src/word';
 import * as crypto from 'crypto';
+import { dictionary } from '../src/dictionary';
 
 describe('game tests', () => {
   it('startGame', async () => {
@@ -54,9 +54,7 @@ describe('game tests', () => {
     const [word, letterIndexes] = await mockWord(game, 'wrong');
 
     // Act
-    useFran(false);
     const result = await gameFunctions.guessTheWord(game.id, letterIndexes);
-    useFran(true);
 
     // Assert
     expect(result.word).to.equal(word);
@@ -124,7 +122,7 @@ describe('game tests', () => {
 });
 
 /**
- * Reads the first 5 letters from the game board, caches them as a word and
+ * Reads the first 5 letters from the game board, optionally adds them to the dictionary and
  * returns their indexes.
  */
 async function mockWord(
@@ -135,12 +133,8 @@ async function mockWord(
     .slice(0, 5)
     .map((letter) => letter.char)
     .join('');
-  if (type !== 'wrong') {
-    await db.collection('words').doc(word).set({
-      value: word,
-      source: 'game.spec.ts',
-      cachedSince: new Date().getTime(),
-    });
+  if (type === 'correct') {
+    dictionary.addWord(word);
   }
   return [word, [0, 1, 2, 3, 4]];
 }

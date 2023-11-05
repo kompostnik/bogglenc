@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Auth, User, user } from '@angular/fire/auth';
-import { map, Observable } from 'rxjs';
+import { defer, map, Observable } from 'rxjs';
 import { minidenticon } from 'minidenticons';
 
 /**
@@ -17,12 +17,12 @@ export class AuthService {
     user$!: Observable<User | null>;
 
     constructor(private readonly _auth: Auth) {
-        console.log('AuthService constructed')
+        console.log('AuthService constructed');
         this.auth = _auth;
         this.user$ = user(this.auth).pipe(map(fireUser => {
             console.log('fire user', fireUser);
             this.user = this.fireUserToUserProfile(fireUser);
-            console.log('user profile', this.user)
+            console.log('user profile', this.user);
             return fireUser;
         }));
     }
@@ -31,14 +31,16 @@ export class AuthService {
         return this.user !== undefined;
     }
 
+    get missingUsername(): boolean {
+        return !this.user?.name;
+    }
+
+    get accountComplete():boolean{
+        return this.isAuthenticated && !this.missingUsername;
+    }
+
     logout() {
-        this.auth.signOut()
-            .then(() => {
-                // Logout successful
-            })
-            .catch((error: any) => {
-                // An error occurred
-            });
+        return defer(() => this.auth.signOut());
     }
 
     /**

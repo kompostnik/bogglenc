@@ -37,9 +37,14 @@ html, body {
 .container-small, .container-large {
   max-width: 100%;
 }
-
+.btn-primary{
+  color: white;
+}
 tr.bg-primary{
   --bs-bg-opacity: 0.5
 }
+
+// firebaseui styles
+@import 'firebaseui';
 
 @import "bootstrap-dark-mode";

@@ -63,6 +63,7 @@
     <div *ngIf="userProfile" class="row mt-3">
         <div class="col">
             <h5>Seznam iger</h5>
+
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -93,6 +94,9 @@
                     </tr>
                 </tbody>
             </table>
+            <div *ngIf="!games || games.length === 0" class="alert alert-secondary text-center">
+                Ni zabeleženih iger
+            </div>
         </div>
     </div>
 </ng-container>

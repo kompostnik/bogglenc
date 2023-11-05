@@ -1,26 +1,40 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    OnDestroy,
+    OnInit,
+    ViewChild
+} from '@angular/core';
+import { authState, getAuth } from '@angular/fire/auth';
 import { BehaviorSubject, catchError, delay, Observable, of, Subscription, throwError } from 'rxjs';
-import { AuthService, UserProfile } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { BackendService, Game } from '../../services/backend.service';
+import { BsModalRef } from 'ngx-bootstrap/modal';
+import { BackendService } from '../../services/backend.service';
 
 @Component({
-    selector: 'app-profile',
-    templateUrl: './profile.component.html',
-    styleUrls: ['./profile.component.scss'],
+    selector: 'app-auth-modal',
+    templateUrl: './auth-modal.component.html',
+    styleUrls: ['./auth-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProfileComponent implements OnInit, OnDestroy {
-
-    userProfile!: UserProfile | undefined;
-    profileId?: string | null;
-    inProgress$ = new BehaviorSubject<boolean>(false);
-    inProgressUsernameSubmit$ = new BehaviorSubject<boolean>(false);
-    showUsernameForm: boolean = false;
+export class AuthModalComponent implements OnDestroy, OnInit {
+    auth = getAuth();
+    authState$ = authState(this.auth);
+    authStateSubscription!: Subscription;
+    infoText!: string;
     usernameInput!: string;
     usernameInputError!: string | undefined;
-    games: Game[] = [];
+    inProgressUsernameSubmit$ = new BehaviorSubject<boolean>(false);
+    inProgress$ = new BehaviorSubject<boolean>(false);
+    authModalState$ = new BehaviorSubject<AuthModalState | undefined>(undefined);
+    redirect: string | undefined = 'profile';
+    @ViewChild('usernameInputElementRef')
+    usernameInputElementRef!: ElementRef;
+    protected readonly AuthModalState = AuthModalState;
     private userSubscription!: Subscription;
     private logoutSubscription!: Subscription;
 
@@ -28,32 +42,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 private route: ActivatedRoute,
                 private router: Router,
                 public backendService: BackendService,
-                private cdr: ChangeDetectorRef) {}
-
-    ngOnInit(): void {
-        this.inProgress$.next(true);
-        this.profileId = this.route.snapshot.paramMap.get('id');
-        if (this.profileId) {
-            // fetch profile
-            this.loadOtherUserProfile();
-        } else {
-            this.loadCurrentUserProfile();
-        }
-    }
-
-    uiActionLogout() {
-        console.log('uiActionLogout');
-        this.userProfile = undefined;
-        this.userSubscription = this.authService.user$.subscribe(value => {
-            if (!value) {
-                this.cdr.detectChanges();
-                setTimeout(() => this.router.navigate(['']));
-            }
-        });
-        this.logoutSubscription = this.authService.logout().subscribe();
+                private cdr: ChangeDetectorRef,
+                public modalRef: BsModalRef) {
     }
 
     ngOnDestroy(): void {
+        if (this.authStateSubscription) {
+            this.authStateSubscription.unsubscribe();
+        }
         if (this.userSubscription) {
             this.userSubscription.unsubscribe();
         }
@@ -62,10 +58,48 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
     }
 
+    ngOnInit(): void {
+        if (this.authService.isAuthenticated && this.authService.missingUsername) {
+            this.authModalState$.next(AuthModalState.MISSING_USERNAME);
+        } else if (this.authService.isAuthenticated) {
+            this.authModalState$.next(AuthModalState.COMPLETE);
+        } else if (!this.authService.isAuthenticated) {
+            this.authModalState$.next(AuthModalState.NO_AUTHENTICATION);
+        }
+
+
+        this.authModalState$.subscribe(state => {
+            if (state === AuthModalState.NO_AUTHENTICATION) {
+                this.authStateSubscriptionInit();
+            } else if (state === AuthModalState.MISSING_USERNAME) {
+                setTimeout(() => this.usernameInputElementRef.nativeElement.focus());
+            } else if (state === AuthModalState.COMPLETE) {
+                if (this.redirect) {
+                    console.log('User is authenticated redirect to profile view.');
+                    this.router.navigate(['profile']);
+                }
+                this.modalRef.hide();
+            }
+        });
+    }
+
+
+    actionLogout() {
+        this.userSubscription = this.authService.user$.subscribe(value => {
+            if (!value) {
+                this.modalRef.hide();
+                this.cdr.detectChanges();
+            }
+        });
+        this.logoutSubscription = this.authService.logout().subscribe();
+    }
+
+
     /**
      * Check if user's username exists, if not prompt for one.
      */
     checkUsername() {
+        this.inProgress$.next(true);
         const uid = this.authService.user?.uid;
         if (this.authService.user?.uid) {
             const checkBackendForUsername: Observable<Response> = of(
@@ -76,7 +110,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
                     delay(500),
                     catchError((err: HttpErrorResponse, caught) => {
                         if (err.status === 404) {
-                            this.showUsernameForm = true;
+                            this.authModalState$.next(AuthModalState.MISSING_USERNAME);
                         }
 
                         this.inProgress$.next(false);
@@ -87,7 +121,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
             checkBackendForUsername.subscribe(value => {
                 if (value.status === 404) {
-                    this.showUsernameForm = true;
+                    this.authModalState$.next(AuthModalState.MISSING_USERNAME);
                 }
 
                 this.inProgress$.next(false);
@@ -132,47 +166,22 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this.cdr.detectChanges();
             } else {
                 this.authService.user!.name = this.usernameInput;
-                this.showUsernameForm = false;
-                this.loadCurrentUserProfile();
+                this.authModalState$.next(AuthModalState.COMPLETE);
             }
             this.inProgressUsernameSubmit$.next(false);
         });
     }
 
-    private loadOtherUserProfile() {
-        this.inProgress$.next(false);
-    }
-
-    private loadCurrentUserProfile() {
-        if (this.authService.isAuthenticated) {
-            if (!this.authService.user?.name) {
+    private authStateSubscriptionInit() {
+        this.authStateSubscription = this.authState$.subscribe((aUser) => {
+            //handle auth state changes here. Note, that user will be null if there is no currently logged in user.
+            if (aUser) {
                 this.checkUsername();
-            } else {
-                this.userProfile = JSON.parse(JSON.stringify(this.authService.user)) as UserProfile;
-                this.fetchLeaderBoard();
             }
-        } else {
-            this.inProgress$.next(false);
-            this.cdr.detectChanges();
-        }
+        });
     }
+}
 
-    private fetchLeaderBoard() {
-        this.backendService.getLeaderBoard()
-            .pipe(
-                catchError(err => {
-                    console.log('Handling error locally and rethrowing it...', err);
-                    this.inProgress$.next(false);
-                    this.cdr.detectChanges();
-                    return throwError(err);
-                })
-            )
-            .subscribe(data => {
-                this.games = data.filter(game => {
-                    return game.name === this.authService.user?.name;
-                }) as any[];
-                this.inProgress$.next(false);
-                this.cdr.detectChanges();
-            });
-    }
+export enum AuthModalState {
+    NO_AUTHENTICATION, MISSING_USERNAME, COMPLETE
 }

@@ -3,6 +3,7 @@
         <h1>Bogglenc</h1>
     </div>
 </div>
+
 <div class="mt-5">
     <dl class="list-group list-group-flush main-menu-list">
         <li class="list-group-item">
@@ -38,10 +39,11 @@
             </button>
         </li>
         <li class="list-group-item">
-            <a class="btn btn-outline-secondary btn-lg p-3 shadow-sm"
-            [routerLink]="'auth'"
+            <a class="btn btn-outline-secondary btn-lg p-3 shadow-sm position-relative"
+                (click)="actionGoToProfile()"
             >
-                <i aria-hidden="true" class="bi bi-person"></i>Moj Profil
+                <i class="bi bi-unlock" *ngIf="!authService.isAuthenticated"></i><i class="bi bi-lock-fill text-primary" *ngIf="authService.isAuthenticated"></i> Moj Profil
+                <div *ngIf="authService.isAuthenticated && authService.missingUsername" aria-hidden="true" class="attention bg-warning"></div>
             </a>
         </li>
     </dl>

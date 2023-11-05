@@ -22,12 +22,8 @@
                 >
                     <td>{{index + 1}}</td>
                     <td>
-                        <img
-                            *ngIf="authService.isAuthenticated"
-                            class="border border-1 rounded-3"
-                            height="50"
-                            src="{{authService.user?.avatarSrc}}"
-                        />
+                        <app-player-avatar
+                            [seed]="game.name" [height]="50"></app-player-avatar>
                     </td>
                     <td>
                         <a class="text-uppercase" [routerLink]="['../profile', game.name]">{{game.name}}</a>

@@ -89,7 +89,7 @@ export class MainMenuComponent {
                 this.cdr.detectChanges();
             });
         } else {
-            this.router.navigate(['profile']);
+            this.router.navigate(['profile', this.authService.user?.name]);
         }
     }
 }

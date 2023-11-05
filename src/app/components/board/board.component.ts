@@ -52,7 +52,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     wordSubmitEvent = new EventEmitter<number[]>();
     sameWordError = false;
     protected readonly GameService = GameService;
-    private flipTimeout!: number;
+    private flipTimeout!: any;
     private wordValidSubscription!: Subscription;
     private gameStateSubscription!: Subscription;
 

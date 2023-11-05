@@ -19,10 +19,6 @@ const routes: Routes = [
         component: GameOverComponent
     },
     {
-        path: 'profile',
-        component: ProfileComponent
-    },
-    {
         path: 'profile/:id',
         component: ProfileComponent
     }

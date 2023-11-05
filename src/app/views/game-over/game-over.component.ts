@@ -45,9 +45,9 @@ export class GameOverComponent implements OnInit {
     }
 
     submitScoreToLeaderboard() {
-        if (!this.gameService.gameData!.game.name) {
+        if (!this.gameService.gameData!.game.assignedToPlayer) {
             this.inProgress$.next(true);
-            this.backendService.submitName(this.gameService.gameData!.game.id, this.authService.user!.name)
+            this.backendService.assignGameToPlayer(this.gameService.gameData!.game.id, this.authService.user!.uid)
                 .pipe(
                     catchError(err => {
                         this.inProgress$.next(false);
@@ -67,7 +67,7 @@ export class GameOverComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        if (this.gameService.gameData!.game.name) {
+        if (this.gameService.gameData!.game.assignedToPlayer) {
             this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD_AND_SUBMITTED);
         } else if (this.gameService.gameData!.game.leaderboardRank) {
             if (this.authService.accountComplete) {
@@ -80,6 +80,7 @@ export class GameOverComponent implements OnInit {
         }
 
         this.gameOverState$.subscribe(state => {
+            console.log('gameOverState$', state)
             if (state === GameOverState.ENTERED_LEADERBOARD_PENDING_SUBMISSION) {
                 this.submitScoreToLeaderboard();
             }

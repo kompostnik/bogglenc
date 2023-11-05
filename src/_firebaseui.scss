@@ -1,0 +1,27 @@
+button.firebaseui-idp-button {
+    @extend .btn;
+    max-width: initial;
+    padding:1rem;
+}
+button.firebaseui-id-submit, button.mdl-button--raised.mdl-button--colored {
+    @extend .btn;
+    @extend .btn-primary;
+}
+button.mdl-button--primary.mdl-button--primary{
+    @extend .btn;
+    @extend .btn-secondary;
+}
+div.firebaseui-form-actions{
+    @extend .d-flex;
+    @extend .justify-content-between;
+}
+label.firebaseui-label::after{
+    background-color: var(--bs-primary) !important;
+}
+div.mdl-shadow--2dp{
+    box-shadow: none;
+}
+div.firebaseui-container{
+    font: inherit;
+    max-width: initial;
+}

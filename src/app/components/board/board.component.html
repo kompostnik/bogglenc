@@ -63,7 +63,7 @@
                         </button>
                     </div>
                     <div *ngIf="!gameService.currentWord && !gameOver && !sameWordError" class="text-center p-4 commands-notification">Poišči {{besedWord}}, čas se
-                                                                                                                     izteka!
+                                                                                                                     izteka! ({{100 - timeProgress}}s)
                     </div>
                     <div *ngIf="!gameOver && sameWordError" class="text-center text-warning p-4 commands-notification">
                         Beseda je že priznana, poglej seznam <app-inventory></app-inventory>

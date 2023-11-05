@@ -24,12 +24,12 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { TimerComponent } from './components/timer/timer.component';
 import { BoardKeyComponent } from './components/board-key/board-key.component';
 import { ProfileComponent } from './views/profile/profile.component';
-import { AuthComponent } from './views/auth/auth.component';
 import { FormsModule } from '@angular/forms';
 import { ExtendedFirebaseUIAuthConfig, firebase, firebaseui, FirebaseUIModule } from 'firebaseui-angular-i18n';
 import { AngularFireAuthModule } from '@angular/fire/compat/auth';
 import { AngularFireModule } from '@angular/fire/compat';
 import { AuthService } from './services/auth.service';
+import { AuthModalComponent } from './components/auth-modal/auth-modal.component';
 
 const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
     signInFlow: 'popup',
@@ -86,7 +86,7 @@ export function authInitializer(authService: AuthService) {
         TimerComponent,
         BoardKeyComponent,
         ProfileComponent,
-        AuthComponent
+        AuthModalComponent
     ],
     imports: [
         provideFirebaseApp(() => initializeApp(environment.firebase)),

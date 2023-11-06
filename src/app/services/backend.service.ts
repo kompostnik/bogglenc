@@ -66,6 +66,11 @@ export class BackendService {
         return this.httpClient.post(`${environment.backendPath}/readPlayerProfile`, payload, {responseType: "json"}) as Observable<PlayerProfile>
     }
 
+    getPlayerLeaderboard(nickname: string): Observable<Game[]>{
+        const payload = { nickname: nickname }
+        return this.httpClient.post(`${environment.backendPath}/getPlayerLeaderboard`, payload, {responseType: "json"}) as Observable<Game[]>
+    }
+
     submitPlayerProfile(uid: string,  nickname: string): Observable<PlayerProfile>{
         const payload = { uid: uid, nickname: nickname }
         return this.httpClient.post(`${environment.backendPath}/submitPlayerProfile`, payload, {responseType: "json"}) as Observable<PlayerProfile>

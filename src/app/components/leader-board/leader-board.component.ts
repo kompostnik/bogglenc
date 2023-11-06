@@ -46,6 +46,7 @@ export class LeaderBoardComponent implements OnInit, OnDestroy {
             .pipe(
                 catchError(err => {
                     this.inProgress = false;
+                    this.cdr.detectChanges()
                     console.log('Handling error locally and rethrowing it...', err);
                     return throwError(err);
                 })

@@ -4,8 +4,7 @@ import { dictionary } from './dictionary';
 import * as playerService from './player';
 import { PlayerProfileEntity } from './player';
 import { entityToGame } from './mappers';
-import { firestore } from 'firebase-admin';
-import FieldPath = firestore.FieldPath;
+import { FieldPath } from '@google-cloud/firestore';
 
 type LetterChar =
   | 'a'

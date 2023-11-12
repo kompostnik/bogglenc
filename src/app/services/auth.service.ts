@@ -34,8 +34,16 @@ export class AuthService {
         return !this.user?.name;
     }
 
-    get accountComplete():boolean{
+    get accountComplete(): boolean {
         return this.isAuthenticated && !this.missingUsername;
+    }
+
+    initialize(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.user$.subscribe(user => {
+                resolve(true);
+            });
+        });
     }
 
     logout() {
@@ -52,7 +60,7 @@ export class AuthService {
             return undefined;
         }
         return {
-            uid: user.uid,
+            uid: user.uid
         } as UserProfile;
     }
 }

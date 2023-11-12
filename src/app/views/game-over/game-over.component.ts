@@ -17,7 +17,6 @@ import { AuthModalComponent, AuthModalState } from '../../components/auth-modal/
 export class GameOverComponent implements OnInit, OnDestroy {
     gameOverState$ = new BehaviorSubject<GameOverState | undefined>(undefined);
     games$ = new BehaviorSubject<Game[] | undefined>(undefined);
-    leaderBoardPosition = -1;
     gameOverStateSubscription!: Subscription;
     gamesSubscription!: Subscription;
     gameOverType!: GameOverType;
@@ -32,10 +31,6 @@ export class GameOverComponent implements OnInit, OnDestroy {
                 private cdr: ChangeDetectorRef,
                 private backendService: BackendService) {
 
-    }
-
-    get enteredToLeaderBoard(): boolean {
-        return this.leaderBoardPosition > -1;
     }
 
     actionOpenAchievementsModal() {
@@ -112,26 +107,7 @@ export class GameOverComponent implements OnInit, OnDestroy {
             )
             .subscribe(games => {
                 this.games$.next(games);
-                const gamesByScore = games.filter((game: Game) => game.score < this.gameService.gameData!.game.score);
-                const gameIndex = games.findIndex((game: Game) => game.id === this.gameService.gameData!.game.id);
-
-                if(gameIndex > -1){
-                    this.leaderBoardPosition = gameIndex + 1;
-                } else if (games.length === 0) {
-                    this.leaderBoardPosition = 1;
-                } else if(games.length < 50) {
-                    this.leaderBoardPosition = games.length + 1;
-                } else {
-                    if (gamesByScore.length > 0) {
-                        this.leaderBoardPosition = gamesByScore.length + 1;
-                    }
-                }
-
-                if (this.leaderBoardPosition > 0) {
-                    this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD);
-                } else {
-                    this.gameOverState$.next(GameOverState.NOT_ENTERED_LEADERBOARD);
-                }
+                this.gameOverState$.next(GameOverState.GAMES_LOADED)
                 this.cdr.detectChanges();
             });
     }
@@ -149,8 +125,7 @@ export class GameOverComponent implements OnInit, OnDestroy {
 export enum GameOverState {
     ASSIGNING_GAME_TO_PLAYER,
     LOADING_GAMES,
-    ENTERED_LEADERBOARD,
-    NOT_ENTERED_LEADERBOARD
+    GAMES_LOADED
 }
 
 export enum GameOverType {

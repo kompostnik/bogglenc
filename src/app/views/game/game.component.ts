@@ -46,6 +46,7 @@ export class GameComponent implements OnInit, OnDestroy {
             } else if (gameState === GameState.WORD_IN_SUBMISSION) {
                 this.pauseTimer();
             } else if(gameState === GameState.GAME_OVER){
+                this.pauseTimer();
                 this.handleGameOverCondition();
             }
         });

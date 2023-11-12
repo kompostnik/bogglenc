@@ -119,6 +119,7 @@ describe('game tests', () => {
     const leaderboardEntry = leaderboard.find((item) => item.id === game.id);
     expect(leaderboardEntry?.name).to.equal(playerName);
     expect(leaderboardEntry?.score).to.equal(endedGame.score);
+    expect(leaderboardEntry?.assignedToPlayer).to.be.true;
     leaderboard.forEach((item) => {
       expect(item.endedAt).to.be.a('number');
       expect(item.endedAndNamed).to.be.true;

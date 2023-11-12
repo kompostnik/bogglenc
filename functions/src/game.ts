@@ -288,6 +288,7 @@ export async function assignToPlayer(
 
   game.name = player.nickname;
   game.playerUid = playerUid;
+  game.assignedToPlayer = true;
 
   if (game.endedAt) {
     game.endedAndNamed = true;

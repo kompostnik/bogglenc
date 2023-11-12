@@ -46,6 +46,26 @@ export class AuthModalComponent implements OnDestroy, OnInit {
                 public modalRef: BsModalRef) {
     }
 
+    get afterUsernameButtonText() {
+        if (this.redirect) {
+            return 'Na profil';
+        } else {
+            return 'Zapri';
+        }
+    };
+
+    get title(): string {
+        if (this.authModalState$.value === AuthModalState.NO_AUTHENTICATION) {
+            return 'Prijava';
+        } else if (this.authModalState$.value === AuthModalState.MISSING_USERNAME) {
+            return 'Zadnji korak';
+        } else if (this.authModalState$.value === AuthModalState.AFTER_USERNAME) {
+            return 'Profil ustvarjen';
+        } else {
+            return 'Prijava';
+        }
+    };
+
     ngOnDestroy(): void {
         if (this.authStateSubscription) {
             this.authStateSubscription.unsubscribe();
@@ -158,10 +178,20 @@ export class AuthModalComponent implements OnDestroy, OnInit {
                     this.cdr.detectChanges();
                 } else {
                     this.authService.user!.name = this.usernameInput;
-                    this.authModalState$.next(AuthModalState.COMPLETE);
+                    this.authModalState$.next(AuthModalState.AFTER_USERNAME);
                 }
                 this.inProgressUsernameSubmit$.next(false);
             });
+    }
+
+    actionCloseAfterUsername() {
+        this.authModalState$.next(AuthModalState.COMPLETE);
+        if (this.redirect) {
+            this.router.navigate(['profile', this.authService.user?.name]);
+            this.modalRef.hide();
+        } else {
+            this.modalRef.hide();
+        }
     }
 
     private authStateSubscriptionInit() {
@@ -175,5 +205,5 @@ export class AuthModalComponent implements OnDestroy, OnInit {
 }
 
 export enum AuthModalState {
-    NO_AUTHENTICATION, MISSING_USERNAME, COMPLETE
+    NO_AUTHENTICATION, MISSING_USERNAME, COMPLETE, AFTER_USERNAME
 }

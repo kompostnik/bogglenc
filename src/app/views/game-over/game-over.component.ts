@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { BsModalService, ModalOptions } from 'ngx-bootstrap/modal';
 import { Router } from '@angular/router';
 import { AchievementsComponent } from '../../components/achievements/achievements.component';
 import { AuthService } from '../../services/auth.service';
-import { BehaviorSubject, catchError, throwError } from 'rxjs';
-import { BackendService } from '../../services/backend.service';
+import { BehaviorSubject, catchError, Subscription, throwError } from 'rxjs';
+import { BackendService, Game } from '../../services/backend.service';
 import { AuthModalComponent, AuthModalState } from '../../components/auth-modal/auth-modal.component';
 
 @Component({
@@ -14,75 +14,71 @@ import { AuthModalComponent, AuthModalState } from '../../components/auth-modal/
     styleUrls: ['./game-over.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class GameOverComponent implements OnInit {
+export class GameOverComponent implements OnInit, OnDestroy {
     gameOverState$ = new BehaviorSubject<GameOverState | undefined>(undefined);
-    inProgress$ = new BehaviorSubject<boolean>(false);
+    games$ = new BehaviorSubject<Game[] | undefined>(undefined);
+    leaderBoardPosition = -1;
+    gameOverStateSubscription!: Subscription;
+    gamesSubscription!: Subscription;
+    gameOverType!: GameOverType;
     protected readonly GameService = GameService;
     protected readonly GameOverState = GameOverState;
+    protected readonly GameOverType = GameOverType;
 
     constructor(public gameService: GameService,
                 private modalService: BsModalService,
                 private router: Router,
                 public authService: AuthService,
+                private cdr: ChangeDetectorRef,
                 private backendService: BackendService) {
 
     }
 
     get enteredToLeaderBoard(): boolean {
-        if (!this.gameService.gameData!.game!.leaderboardRank) {
-            return false;
-        }
-        const rankInLimit = this.gameService.gameData!.game!.leaderboardRank > 0 && this.gameService.gameData!.game!.leaderboardRank < 50;
-        return rankInLimit && this.gameService.score! > 0;
-    }
-
-    get endByWordCount(): boolean {
-        return this.gameService!.guessedWords!.length >= GameService.GAME_WORDS_LIMIT;
+        return this.leaderBoardPosition > -1;
     }
 
     actionOpenAchievementsModal() {
         this.modalService.show(AchievementsComponent, { class: 'modal-lg' });
     }
 
-    submitScoreToLeaderboard() {
-        if (!this.gameService.gameData!.game.assignedToPlayer) {
-            this.inProgress$.next(true);
+    assignGameToPlayer() {
+        if (!this.gameService.gameData!.game.name) {
+
             this.backendService.assignGameToPlayer(this.gameService.gameData!.game.id, this.authService.user!.uid)
                 .pipe(
                     catchError(err => {
-                        this.inProgress$.next(false);
                         console.log('Handling error locally and rethrowing it...', err);
                         return throwError(err);
                     })
                 )
                 .subscribe(value => {
-                    this.inProgress$.next(false);
                     this.gameService.leaderBoardFormSubject$.next(true);
                     this.gameService.gameData!.game.name = this.authService.user!.name;
                     this.gameService.persistGameData();
-                    this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD_AND_SUBMITTED);
+                    this.gameOverState$.next(GameOverState.LOADING_GAMES);
                 });
         }
-
     }
 
     ngOnInit(): void {
-        if (this.gameService.gameData!.game.assignedToPlayer) {
-            this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD_AND_SUBMITTED);
-        } else if (this.gameService.gameData!.game.leaderboardRank) {
-            if (this.authService.accountComplete) {
-                this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD_PENDING_SUBMISSION);
-            } else {
-                this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD_BUT_ACCOUNT_MISSING);
-            }
+        if (this.authService.accountComplete && !this.gameService.gameData!.game.name) {
+            this.gameOverState$.next(GameOverState.ASSIGNING_GAME_TO_PLAYER);
         } else {
-            this.gameOverState$.next(GameOverState.NOT_ENTERED_LEADERBOARD);
+            this.gameOverState$.next(GameOverState.LOADING_GAMES);
         }
 
-        this.gameOverState$.subscribe(state => {
-            console.log('gameOverState$', state)
-            if (state === GameOverState.ENTERED_LEADERBOARD_PENDING_SUBMISSION) {
-                this.submitScoreToLeaderboard();
+        if (this.gameService!.guessedWords!.length >= GameService.GAME_WORDS_LIMIT) {
+            this.gameOverType = GameOverType.WORDS_LIMIT;
+        } else {
+            this.gameOverType = GameOverType.TIME_LIMIT;
+        }
+
+        this.gameOverStateSubscription = this.gameOverState$.subscribe(state => {
+            if (state === GameOverState.ASSIGNING_GAME_TO_PLAYER) {
+                this.assignGameToPlayer();
+            } else if (state === GameOverState.LOADING_GAMES) {
+                this.fetchLeaderBoard();
             }
         });
     }
@@ -98,16 +94,65 @@ export class GameOverComponent implements OnInit {
 
             bsModalRef.content!.authModalState$!.subscribe((state: AuthModalState | undefined) => {
                 if (state === AuthModalState.COMPLETE) {
-                    this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD_PENDING_SUBMISSION);
+                    if (this.authService.accountComplete) {
+                        this.gameOverState$.next(GameOverState.ASSIGNING_GAME_TO_PLAYER);
+                    }
                 }
+                this.cdr.detectChanges();
             });
+        }
+    }
+
+    fetchLeaderBoard() {
+        this.gamesSubscription = this.backendService.getLeaderBoard()
+            .pipe(
+                catchError(err => {
+                    return throwError(err);
+                })
+            )
+            .subscribe(games => {
+                this.games$.next(games);
+                const gamesByScore = games.filter((game: Game) => game.score < this.gameService.gameData!.game.score);
+                const gameIndex = games.findIndex((game: Game) => game.id === this.gameService.gameData!.game.id);
+
+                if(gameIndex > -1){
+                    this.leaderBoardPosition = gameIndex + 1;
+                } else if (games.length === 0) {
+                    this.leaderBoardPosition = 1;
+                } else if(games.length < 50) {
+                    this.leaderBoardPosition = games.length + 1;
+                } else {
+                    if (gamesByScore.length > 0) {
+                        this.leaderBoardPosition = gamesByScore.length + 1;
+                    }
+                }
+
+                if (this.leaderBoardPosition > 0) {
+                    this.gameOverState$.next(GameOverState.ENTERED_LEADERBOARD);
+                } else {
+                    this.gameOverState$.next(GameOverState.NOT_ENTERED_LEADERBOARD);
+                }
+                this.cdr.detectChanges();
+            });
+    }
+
+    ngOnDestroy(): void {
+        if (this.gameOverStateSubscription) {
+            this.gameOverStateSubscription.unsubscribe();
+        }
+        if (this.gamesSubscription) {
+            this.gamesSubscription.unsubscribe();
         }
     }
 }
 
 export enum GameOverState {
-    ENTERED_LEADERBOARD_PENDING_SUBMISSION,
-    ENTERED_LEADERBOARD_AND_SUBMITTED,
-    ENTERED_LEADERBOARD_BUT_ACCOUNT_MISSING,
+    ASSIGNING_GAME_TO_PLAYER,
+    LOADING_GAMES,
+    ENTERED_LEADERBOARD,
     NOT_ENTERED_LEADERBOARD
+}
+
+export enum GameOverType {
+    WORDS_LIMIT, TIME_LIMIT
 }

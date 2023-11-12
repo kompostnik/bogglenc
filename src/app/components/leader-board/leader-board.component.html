@@ -1,37 +1,48 @@
 <div class="">
     <div class="container-small">
-        <div *ngIf="inProgress" class="spinner-border spinner-border-sm" role="status"></div>
+        <ng-container *ngIf="inProgress">
+            <div class="alert alert-secondary text-center">
+                Pridobivam seznam iger <div class="spinner-border spinner-border-sm" role="status"></div>
+            </div>
+        </ng-container>
 
-        <table *ngIf="!inProgress" class="table table-striped">
-            <thead>
-                <th class="col-1">Rank</th>
-                <th class="col" colspan="2">Igralec</th>
-                <th class="col-3">
-                    <i class="bi bi-record-circle me-1"></i>
-                    Točke
-                </th>
-            </thead>
-            <tbody>
-                <tr
-                    (click)="uiActionNavigateToProfile(game.name)"
-                    *ngFor="let game of games; let index = index"
-                    [class.bg-primary]="isCurrentGame(game)"
-                    [class.text-white]="isCurrentGame(game)"
-                    [class.victory]="isCurrentGame(game)"
-                    id="{{index}}"
-                >
-                    <td>{{index + 1}}</td>
-                    <td>
-                        <app-player-avatar
-                            [seed]="game.name" [height]="50"></app-player-avatar>
-                    </td>
-                    <td>
-                        <a class="text-uppercase" [routerLink]="['../profile', game.name]">{{game.name}}</a>
-                    </td>
-                    <td>
-                        {{game.score}}</td>
-                </tr>
-            </tbody>
-        </table>
+        <ng-container *ngIf="!inProgress">
+            <table *ngIf="!inProgress" class="table table-striped">
+                <thead>
+                    <th class="col-1">Rank</th>
+                    <th class="col" colspan="2">Igralec</th>
+                    <th class="col-3">
+                        <i class="bi bi-record-circle me-1"></i>
+                        Točke
+                    </th>
+                </thead>
+                <tbody>
+                    <tr
+                        (click)="actionNavigateToProfile(game.name)"
+                        *ngFor="let game of games; let index = index"
+                        [class.bg-primary]="isCurrentGame(game)"
+                        [class.text-white]="isCurrentGame(game)"
+                        [class.victory]="isCurrentGame(game)"
+                        id="{{index}}"
+                    >
+                        <td>{{index + 1}}</td>
+                        <td>
+                            <app-player-avatar
+                                [height]="50" [seed]="game.name"
+                            ></app-player-avatar>
+                        </td>
+                        <td>
+                            <a [routerLink]="['../profile', game.name]" class="text-uppercase">{{game.name}}</a>
+                        </td>
+                        <td>
+                            {{game.score}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div *ngIf="!games || games.length === 0" class="alert alert-secondary text-center">
+                Ni zabeleženih iger
+            </div>
+        </ng-container>
     </div>
 </div>

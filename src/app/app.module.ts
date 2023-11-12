@@ -28,11 +28,9 @@ import { FormsModule } from '@angular/forms';
 import { ExtendedFirebaseUIAuthConfig, firebase, firebaseui, FirebaseUIModule } from 'firebaseui-angular-i18n';
 import { AngularFireAuthModule } from '@angular/fire/compat/auth';
 import { AngularFireModule } from '@angular/fire/compat';
-import { AuthService } from './services/auth.service';
 import { AuthModalComponent } from './components/auth-modal/auth-modal.component';
-import { BackendService } from './services/backend.service';
 import { PlayerAvatarComponent } from './components/player-avatar/player-avatar.component';
-import { catchError, throwError } from 'rxjs';
+import { AppInitializer } from './services/app.initializer';
 
 const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
     signInFlow: 'popup',
@@ -60,28 +58,6 @@ const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
     // Optional. Set it to override the default language (English)
     language: 'sl'
 };
-
-export function authInitializer(authService: AuthService, backendService: BackendService) {
-    return (): Promise<any> => {
-        return new Promise(resolve => {
-            authService.user$.subscribe(user => {
-                if (user) {
-                    backendService.readPlayerProfile(user.uid, undefined)
-                        .pipe(catchError((err, caught) => {
-                            resolve(true);
-                            return throwError(err);
-                        }))
-                        .subscribe(value => {
-                            authService.user!.name = value.nickname;
-                            resolve(true);
-                        });
-                } else {
-                    resolve(true);
-                }
-            });
-        });
-    };
-}
 
 @NgModule({
     declarations: [
@@ -135,8 +111,9 @@ export function authInitializer(authService: AuthService, backendService: Backen
     providers: [
         {
             provide: APP_INITIALIZER,
-            useFactory: authInitializer,
-            deps: [AuthService, BackendService],
+            useFactory: (appInitializer: AppInitializer) => () =>
+                appInitializer.initialize(),
+            deps: [AppInitializer],
             multi: true
         }
     ],

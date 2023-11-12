@@ -101,7 +101,7 @@ export class BoardComponent implements OnInit, OnDestroy {
             // unselect
             cell.selected = false;
             cell.selectedIndex = 0;
-            this.checkForAlreadyGuessedWord();
+            // this.checkForAlreadyGuessedWord();
             return;
         }
 
@@ -120,7 +120,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
         this.gameService.persistGameData();
 
-        this.checkForAlreadyGuessedWord();
+        // this.checkForAlreadyGuessedWord();
     }
 
     calculateLettersValue(word: string): number {

@@ -27,7 +27,7 @@ export interface GameData {
 })
 export class GameService {
 
-    public static GAME_TIME_OUT_MILIS = 100;
+    public static GAME_TIME_OUT_MILIS = 1000;
     public static GAME_WORDS_LIMIT = 100;
     public static GAME_END_CONDITION_IN_SECONDS = 100;
     public static GAME_WORD_LENGTH_LIMIT = 3;

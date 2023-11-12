@@ -20,6 +20,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     myProfile: boolean = false;
     private userSubscription!: Subscription;
     private logoutSubscription!: Subscription;
+    private leaderboardSubscription!: Subscription;
 
     constructor(public authService: AuthService,
                 private route: ActivatedRoute,
@@ -57,6 +58,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (this.logoutSubscription) {
             this.logoutSubscription.unsubscribe();
         }
+        if (this.leaderboardSubscription) {
+            this.leaderboardSubscription.unsubscribe();
+        }
     }
 
     private loadUserProfile() {
@@ -72,7 +76,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     private fetchLeaderBoard() {
         if (this.profileId) {
-            this.backendService.getPlayerLeaderboard(this.profileId)
+            this.leaderboardSubscription = this.backendService.getPlayerLeaderboard(this.profileId)
                 .pipe(
                     catchError(err => {
                         console.log('Handling error locally and rethrowing it...', err);
@@ -82,14 +86,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
                     })
                 )
                 .subscribe(data => {
-                    this.games = data.filter(game => {
-                        return game.name === this.authService.user?.name;
-                    }) as any[];
+                    this.games = data
                     this.inProgress$.next(false);
                     this.cdr.detectChanges();
                 });
-        } else {
-
         }
     }
 }

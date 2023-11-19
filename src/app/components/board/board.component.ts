@@ -10,10 +10,13 @@ import {
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BoggleLetter, GameService } from '../../services/game.service';
-import { BsModalService } from 'ngx-bootstrap/modal';
+import { BsModalService, ModalOptions } from 'ngx-bootstrap/modal';
 import { BackendService } from '../../services/backend.service';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { GameState } from '../../views/game/game.component';
+import { LeaderBoardModalComponent } from '../leader-board-modal/leader-board-modal.component';
+import { AuthService } from '../../services/auth.service';
+import { AuthModalComponent } from '../auth-modal/auth-modal.component';
 
 @Component({
     selector: 'app-board',
@@ -24,7 +27,6 @@ import { GameState } from '../../views/game/game.component';
 export class BoardComponent implements OnInit, OnDestroy {
 
     wordInvalid = false;
-    gameOver = false;
     flipCards: number[] = [];
 
     @Input()
@@ -50,8 +52,8 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     @Output()
     wordSubmitEvent = new EventEmitter<number[]>();
-    sameWordError = false;
     protected readonly GameService = GameService;
+    protected readonly GameState = GameState;
     private flipTimeout!: any;
     private wordValidSubscription!: Subscription;
     private gameStateSubscription!: Subscription;
@@ -60,7 +62,8 @@ export class BoardComponent implements OnInit, OnDestroy {
                 public gameService: GameService,
                 private modalService: BsModalService,
                 private backendService: BackendService,
-                private cdr: ChangeDetectorRef) {
+                private cdr: ChangeDetectorRef,
+                public authService: AuthService) {
 
     }
 
@@ -80,19 +83,22 @@ export class BoardComponent implements OnInit, OnDestroy {
     get besedWord(): string {
         const leftWordsToGuess = GameService.GAME_WORDS_LIMIT - (this.gameService.guessedWords?.length ?? 0);
         if (leftWordsToGuess === 4 || leftWordsToGuess === 3) {
-            return `${leftWordsToGuess} besede`;
+            return `${leftWordsToGuess} gesla`;
         } else if (leftWordsToGuess === 2) {
-            return `${leftWordsToGuess} besedi`;
+            return `${leftWordsToGuess} gesli`;
         } else if (leftWordsToGuess === 1) {
-            return `${leftWordsToGuess} besedo`;
+            return `${leftWordsToGuess} geslo`;
         } else {
-            return `${leftWordsToGuess} besed`;
+            return `${leftWordsToGuess} gesel`;
         }
+    }
+
+    get gameOver() {
+        return this.gameState$.value === GameState.GAME_FINISHED;
     }
 
     selectCell(row: number, index: number) {
         this.wordInvalid = false;
-        this.sameWordError = false;
 
         let cell = this.lettersBag[row][index];
 
@@ -172,9 +178,8 @@ export class BoardComponent implements OnInit, OnDestroy {
                 this.wordIncorrect();
             }
         });
-
-        this.gameStateSubscription = this.gameState$.subscribe(gameState => {
-            this.gameOver = gameState === GameState.GAME_OVER;
+        this.gameStateSubscription = this.gameState$.subscribe(value => {
+            this.cdr.detectChanges();
         });
     }
 
@@ -206,33 +211,20 @@ export class BoardComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
     }
 
-    private checkForAlreadyGuessedWord() {
-        const selectedWord = this.selectedLettersAsWord;
-        if (selectedWord && this.gameService.guessedWords) {
-            const wordsWithSameStart = this.gameService.guessedWords!.filter(word => {
-                return word.startsWith(selectedWord);
-            });
-            const sameWords = wordsWithSameStart.filter(word => {
-                return word === selectedWord;
-            });
-            if (sameWords && sameWords.length > 0) {
-                // same word was already guessed
-                this.sameWordError = true;
-                this.cdr.detectChanges();
+    actionLeaderBoard() {
+        return this.modalService.show(LeaderBoardModalComponent);
+    }
+
+    actionAuthenticate() {
+        const bsModalRef = this.modalService.show(AuthModalComponent, {
+            initialState: {
+                infoText: 'Za beleženje dokončanih iger se moraš prijavit. Izberi sredstvo za prijavo.',
+                redirect: undefined
             }
-            // const toBeSameWords = wordsWithSameStart.filter(word => {
-            //     return word.length === (selectedWord.length + 1);
-            // });
-            // indicate characters which will cause already guessed word
-            // toBeSameWords.forEach(toBeSameWord => {
-            //     const characterInWarning = toBeSameWord.charAt(toBeSameWord.length - 1);
-            //     this.gameService.boardBag
-            //         .forEach(letter => {
-            //             if (letter.char === characterInWarning) {
-            //                 letter.inWarning = true;
-            //             }
-            //         });
-            // });
-        }
+        } as ModalOptions);
+
+        bsModalRef.onHide!.subscribe(value => {
+            this.cdr.detectChanges();
+        });
     }
 }

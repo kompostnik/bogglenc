@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { BackendService, Game, Letter } from './backend.service';
+import { Game, Letter } from './backend.service';
 
 export interface BoggleLetter extends Letter {
     selected: boolean
@@ -35,39 +35,9 @@ export class GameService {
     public static LOCAL_STORAGE_GAME_DATA = 'gameDataV2';
     public static LOCAL_STORAGE_GAME_SETTINGS = 'gameSettings';
 
-    letterValues: { [key: string]: number } = {
-        'a': 0,
-        'b': 0,
-        'c': 0,
-        'č': 0,
-        'd': 0,
-        'e': 0,
-        'f': 0,
-        'g': 0,
-        'h': 0,
-        'i': 0,
-        'j': 0,
-        'k': 0,
-        'l': 0,
-        'm': 0,
-        'n': 0,
-        'o': 0,
-        'p': 0,
-        'r': 0,
-        's': 0,
-        'š': 0,
-        't': 0,
-        'u': 0,
-        'v': 0,
-        'z': 0,
-        'ž': 0,
-    };
     gameSettings: GameSettings = {} as GameSettings
     leaderBoardFormSubject$ = new Subject<any>();
     beforeInstallPrompt: any;
-
-    constructor(private backendService: BackendService) {
-    }
 
     private _gameData!: GameData | undefined;
 

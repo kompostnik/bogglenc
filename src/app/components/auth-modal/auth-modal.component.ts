@@ -96,7 +96,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
             } else if (state === AuthModalState.COMPLETE) {
                 if (this.redirect) {
                     console.log('User is authenticated redirect to profile view.');
-                    this.router.navigate(['profile', this.authService.user?.name]);
+                    this.router.navigate(['profile', this.authService.profile?.name]);
                 }
                 this.modalRef.hide();
             }
@@ -111,7 +111,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
                 this.cdr.detectChanges();
             }
         });
-        this.logoutSubscription = this.authService.logout().subscribe();
+        this.authService.logout();
     }
 
 
@@ -138,6 +138,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
                     if (!value) {
                         this.authModalState$.next(AuthModalState.MISSING_USERNAME);
                     } else {
+                        this.authService.username = value.nickname
                         this.authModalState$.next(AuthModalState.COMPLETE);
                     }
 
@@ -146,7 +147,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
         }
     }
 
-    uiActionSubmitUsername() {
+    actionSubmitUsername() {
         const maxLength = 16;
         this.usernameInputError = undefined;
         if (!this.usernameInput || this.usernameInput.trim().length < 1) {
@@ -177,7 +178,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
                     this.usernameInputError = 'Uporabniško ime je že zasedeno';
                     this.cdr.detectChanges();
                 } else {
-                    this.authService.user!.name = this.usernameInput;
+                    this.authService.username = this.usernameInput;
                     this.authModalState$.next(AuthModalState.AFTER_USERNAME);
                 }
                 this.inProgressUsernameSubmit$.next(false);
@@ -187,7 +188,7 @@ export class AuthModalComponent implements OnDestroy, OnInit {
     actionCloseAfterUsername() {
         this.authModalState$.next(AuthModalState.COMPLETE);
         if (this.redirect) {
-            this.router.navigate(['profile', this.authService.user?.name]);
+            this.router.navigate(['profile', this.authService.profile?.name]);
             this.modalRef.hide();
         } else {
             this.modalRef.hide();

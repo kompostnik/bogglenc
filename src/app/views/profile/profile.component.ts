@@ -33,14 +33,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.inProgress$.next(true);
         this.profileId = this.route.snapshot.paramMap.get('id');
         if (!this.profileId && this.authService.accountComplete) {
-            this.router.navigate(['profile', this.authService.user!.name]);
+            this.router.navigate(['profile', this.authService.profile!.name]);
         } else {
-            this.myProfile = this.authService.isAuthenticated && this.profileId === this.authService.user?.name;
+            this.myProfile = this.authService.isAuthenticated && this.profileId === this.authService.profile?.name;
             this.loadUserProfile();
         }
     }
 
-    uiActionLogout() {
+    actionLogout() {
         this.userProfile = undefined;
         this.userSubscription = this.authService.user$.subscribe(value => {
             if (!value) {
@@ -48,7 +48,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 setTimeout(() => this.router.navigate(['']));
             }
         });
-        this.logoutSubscription = this.authService.logout().subscribe();
+        this.authService.logout();
     }
 
     ngOnDestroy(): void {

@@ -61,11 +61,7 @@ export class MainMenuComponent {
     actionResumeGame() {
         if (this.existingGame) {
             this.gameService.gameData = this.existingGame;
-            if (this.gameService.gameData.game.endedAt) {
-                this.router.navigate(['game-over'], { skipLocationChange: true });
-            } else {
-                this.router.navigate(['game'], { skipLocationChange: true });
-            }
+            this.router.navigate(['game'], { skipLocationChange: true });
         }
     }
 
@@ -89,7 +85,7 @@ export class MainMenuComponent {
                 this.cdr.detectChanges();
             });
         } else {
-            this.router.navigate(['profile', this.authService.user?.name]);
+            this.router.navigate(['profile', this.authService.profile?.name]);
         }
     }
 }

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
 import { SplashService } from './splash.service';
-import { ProfileInitializer } from './profile.initializer';
 
 @Injectable({
     providedIn: 'root'
@@ -9,8 +8,7 @@ import { ProfileInitializer } from './profile.initializer';
 export class AppInitializer {
 
     constructor(private authService: AuthService,
-                private splashService: SplashService,
-                private profileInitializer: ProfileInitializer) {
+                private splashService: SplashService) {
 
     }
 
@@ -19,8 +17,8 @@ export class AppInitializer {
             console.log('app initializing');
 
             this.splashService.initialize()
-                .then(() => this.authService.initialize())
-                .then(() => this.profileInitializer.initialize())
+                .then(() => this.authService.initializeUser())
+                .then(() => this.authService.initializeProfile())
                 .then(() => this.splashService.destroy())
                 .then(resolve);
 

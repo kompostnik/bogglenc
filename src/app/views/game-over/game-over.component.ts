@@ -49,7 +49,7 @@ export class GameOverComponent implements OnInit, OnDestroy {
                 )
                 .subscribe(value => {
                     this.gameService.leaderBoardFormSubject$.next(true);
-                    this.gameService.gameData!.game.name = this.authService.user!.name;
+                    this.gameService.gameData!.game.name = this.authService.profile!.name;
                     this.gameService.persistGameData();
                     this.gameOverState$.next(GameOverState.LOADING_GAMES);
                 });

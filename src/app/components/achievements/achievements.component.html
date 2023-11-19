@@ -1,6 +1,6 @@
 <app-modal [icon]="'trophy'" [title]="'Dosežki'">
     <div class="h-100">
-        <ng-container [ngTemplateOutletContext]="{words: gameService.guessedWords, title: 'Odkrite besede'}"
+        <ng-container [ngTemplateOutletContext]="{words: gameService.guessedWords, title: 'Odkrita gesla'}"
                       [ngTemplateOutlet]="wordsList"></ng-container>
 
         <ng-container [ngTemplateOutletContext]="{words: gameService.missedWords, title: 'Nepravilni poskusi'}"

@@ -4,6 +4,7 @@ import { BsModalService } from 'ngx-bootstrap/modal';
 import { BehaviorSubject, catchError, Subject, Subscription, throwError } from 'rxjs';
 import { BackendService, CheckWordResult } from '../../services/backend.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-game',
@@ -23,21 +24,33 @@ export class GameComponent implements OnInit, OnDestroy {
     private inProgressSubscription!: Subscription;
     private gameTickSubscription!: Subscription;
     private gameStateSubscription!: Subscription;
+    private userSubscription!: Subscription;
 
     constructor(public gameService: GameService,
                 private modalService: BsModalService,
                 private backendService: BackendService,
                 private cdr: ChangeDetectorRef,
-                private router: Router) {
+                private router: Router,
+                public authService: AuthService) {
     }
 
     ngOnInit() {
-        if (this.gameService.gameData?.game.endedAt) {
-            // when resuming previous game, which already ended, just navigate to 'game-over'
-            this.navigateToGameOverScreen();
-            return;
+        if (this.gameService.gameData?.game.assignedToPlayer) {
+            this.gameState$.next(GameState.GAME_SUBMITTED);
+        } else if (this.gameService.gameData?.game.endedAt) {
+            this.gameState$.next(GameState.GAME_FINISHED);
         } else {
             this.gameState$.next(GameState.GAME_ACTIVE);
+
+            // on 1 second interval, this observable will broadcast
+            this.gameTickSubscription = this.gameTick$.subscribe(value => {
+                this.gameService.gameData!.timerProgress += 1;
+                this.gameService.persistGameData();
+                if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
+                    this.gameState$.next(GameState.GAME_FINISHING);
+                }
+                this.cdr.detectChanges();
+            });
         }
 
         this.gameStateSubscription = this.gameState$.subscribe(gameState => {
@@ -45,20 +58,21 @@ export class GameComponent implements OnInit, OnDestroy {
                 this.startTimer();
             } else if (gameState === GameState.WORD_IN_SUBMISSION) {
                 this.pauseTimer();
-            } else if(gameState === GameState.GAME_OVER){
+            } else if (gameState === GameState.GAME_FINISHING) {
                 this.pauseTimer();
                 this.handleGameOverCondition();
+            } else if (gameState === GameState.GAME_FINISHED) {
+                this.pauseTimer();
+                this.submitGame();
             }
         });
 
-        // on 1 second interval, this observable will broadcast
-        this.gameTickSubscription = this.gameTick$.subscribe(value => {
-            this.gameService.gameData!.timerProgress += 1;
-            this.gameService.persistGameData();
-            if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
-                this.gameState$.next(GameState.GAME_OVER);
+
+        this.userSubscription = this.authService.profile$.subscribe((value) => {
+
+            if (this.gameState$.value === GameState.GAME_FINISHED && this.authService.accountComplete) {
+                this.submitGame();
             }
-            this.cdr.detectChanges();
         });
     }
 
@@ -76,6 +90,9 @@ export class GameComponent implements OnInit, OnDestroy {
         }
         if (this.gameStateSubscription) {
             this.gameStateSubscription.unsubscribe();
+        }
+        if (this.userSubscription) {
+            this.userSubscription.unsubscribe();
         }
     }
 
@@ -102,7 +119,7 @@ export class GameComponent implements OnInit, OnDestroy {
                 // server returns game with endedAt field if game is over
                 if (check.game.endedAt) {
                     this.inProgress$.next(true);
-                    this.gameState$.next(GameState.GAME_OVER);
+                    this.gameState$.next(GameState.GAME_FINISHED);
                 }
             });
     }
@@ -112,7 +129,9 @@ export class GameComponent implements OnInit, OnDestroy {
         this.gameService.missedWords?.push(this.gameService.currentWord);
         this.wordValid$.next(false);
         this.inProgress$.next(false);
-        this.gameState$.next(GameState.GAME_ACTIVE);
+        if(this.gameState$.value === GameState.WORD_IN_SUBMISSION) {
+            this.gameState$.next(GameState.GAME_ACTIVE);
+        }
     }
 
     private pauseTimer() {
@@ -142,7 +161,8 @@ export class GameComponent implements OnInit, OnDestroy {
             .subscribe(value => {
                 this.gameService.gameData!.game = value;
                 this.gameService.persistGameData();
-                this.navigateToGameOverScreen();
+                this.gameState$.next(GameState.GAME_FINISHED);
+                this.cdr.detectChanges();
             });
     }
 
@@ -161,11 +181,31 @@ export class GameComponent implements OnInit, OnDestroy {
             this.gameService.applyBackendGame(check.game);
             this.inProgress$.next(false);
             this.cdr.detectChanges();
-            this.gameState$.next(GameState.GAME_ACTIVE);
+            if(this.gameState$.value === GameState.WORD_IN_SUBMISSION) {
+                this.gameState$.next(GameState.GAME_ACTIVE);
+            }
         }, 700);
+    }
+
+    private submitGame() {
+        if (this.gameService.gameData?.game.name) {
+            this.gameState$.next(GameState.GAME_SUBMITTED);
+            this.cdr.detectChanges();
+        } else if (this.authService.accountComplete && this.authService.user!.uid && this.gameService.gameData!.game!.score > 0) {
+            this.gameState$.next(GameState.GAME_SUBMITTING);
+            this.backendService.assignGameToPlayer(this.gameService.gameData!.game!.id, this.authService.user!.uid)
+                .subscribe(value => {
+                    this.gameService.gameData!.game = value;
+                    this.gameService.persistGameData();
+                    this.gameState$.next(GameState.GAME_SUBMITTED);
+                    this.cdr.detectChanges();
+                });
+        } else {
+            this.gameState$.next(GameState.GAME_FINISHED_NO_SUBMIT)
+        }
     }
 }
 
 export enum GameState {
-    GAME_ACTIVE, WORD_IN_SUBMISSION, GAME_OVER
+    GAME_ACTIVE, WORD_IN_SUBMISSION, GAME_FINISHING, GAME_FINISHED, GAME_SUBMITTING, GAME_SUBMITTED, GAME_FINISHED_NO_SUBMIT
 }

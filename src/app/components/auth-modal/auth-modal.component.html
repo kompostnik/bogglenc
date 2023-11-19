@@ -64,7 +64,7 @@
                             Odjavi se
                         </a>
                         <button
-                            (click)="uiActionSubmitUsername()"
+                            (click)="actionSubmitUsername()"
                             [disabled]="(inProgressUsernameSubmit$ | async)"
                             class="btn btn-primary float-end text-uppercase"
                             type="submit"
@@ -86,11 +86,11 @@
             <div class="col-4">
                 <h5>Avatar</h5>
                 <app-player-avatar
-                    [seed]="authService.user!.name" [height]="100"></app-player-avatar>
+                    [seed]="authService.profile!.name" [height]="100"></app-player-avatar>
             </div>
             <div class="col">
                 <h5>Vzdevek</h5>
-                <span class="text-uppercase">{{authService.user!.name}}</span>
+                <span class="text-uppercase">{{authService.profile!.name}}</span>
             </div>
         </div>
         <div class="row">

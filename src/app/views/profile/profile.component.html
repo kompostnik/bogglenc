@@ -5,7 +5,12 @@
     </div>
 </div>
 
-<div *ngIf="inProgress$ | async" class="spinner-border spinner-border-sm" role="status"></div>
+<ng-container *ngIf="inProgress$ | async">
+    <div class="alert alert-secondary text-center">
+        Nalagam profila
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+    </div>
+</ng-container>
 
 <ng-container *ngIf="!(inProgress$ | async)">
 
@@ -21,7 +26,7 @@
                 Nazaj v Meni
             </button>
             <button
-                (click)="uiActionLogout()"
+                (click)="actionLogout()"
                 *ngIf="myProfile"
                 aria-label="Odjavi se"
                 class="btn btn-secondary"
@@ -59,7 +64,7 @@
                         </th>
                         <th>
                             <i class="bi bi-book"></i>
-                            Top Beseda
+                            Top Geslo
                         </th>
                     </tr>
                 </thead>

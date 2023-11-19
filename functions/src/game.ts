@@ -53,6 +53,7 @@ export interface Game {
   topWordScore: number;
   words: PlayedWord[];
   assignedToPlayer: boolean;
+  missedOpportunity: string | null;
 }
 
 export interface GameEntity extends Game {
@@ -141,6 +142,7 @@ export function startGame(): Promise<Game> {
     playerUid: null,
     words: [],
     assignedToPlayer: false,
+    missedOpportunity: null
   };
   return db
     .collection('games')
@@ -255,9 +257,57 @@ export async function gameOver(gameId: string): Promise<Game> {
     game.endedAndNamed = true;
     await playerService.updateTopGame(game);
   }
+
+  const boardChars = game.board.map(letter => letter.char).join('');
+  const suggested: string[] = dictionary.wordsByCharacters(boardChars)
+  // // sorted by longest first
+  suggested.sort((a, b) => b.length - a.length);
+  const pickedEntry = await pickSuggestion(game, suggested as string[]);
+  game.missedOpportunity = pickedEntry;
+
   await gameDoc.ref.set(game);
 
   return entityToGame(game);
+}
+async function pickSuggestion(game: GameEntity, suggested: string[]): Promise<string | null> {
+  if(!suggested || suggested.length === 0){
+    return null;
+  }
+
+  let pickedEntry = '';
+  let maxLength;
+
+  if (game.score < 500) maxLength = 5;
+  else if (game.score < 1000) maxLength = 6;
+  else if (game.score < 1500) maxLength = 7;
+  else if (game.score < 2000) maxLength = 8;
+  else if (game.score < 2500) maxLength = 9;
+  else if (game.score < 3000) maxLength = 10;
+  else if (game.score < 3500) maxLength = 11;
+  else if (game.score < 4000) maxLength = 12;
+  else if (game.score < 4500) maxLength = 13;
+  else if (game.score < 5000) maxLength = 14;
+  else if (game.score < 5500) maxLength = 15;
+  else maxLength = 16;
+
+  for (const entry of suggested) {
+    if (entry.length <= maxLength) {
+      pickedEntry = entry;
+      break;
+    }
+  }
+
+  if (!pickedEntry) {
+    // Go to the next maxLength if no suitable entry was found
+    if (maxLength < 16) {
+      maxLength += 1;
+      return pickSuggestion(game, suggested);
+    } else {
+      return null;
+    }
+  }
+
+  return pickedEntry;
 }
 
 export async function assignToPlayer(

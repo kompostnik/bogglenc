@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Auth, User, user } from '@angular/fire/auth';
-import { defer, map, Observable } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, throwError } from 'rxjs';
+import { BackendService } from './backend.service';
 
 /**
  * Inspired from
@@ -11,61 +12,98 @@ import { defer, map, Observable } from 'rxjs';
     providedIn: 'root'
 })
 export class AuthService {
-    user: UserProfile | undefined;
-    auth!: Auth;
-    user$!: Observable<User | null>;
+    constructor(private readonly auth: Auth, private backendService: BackendService) {
 
-    constructor(private readonly _auth: Auth) {
-        console.log('AuthService constructed');
-        this.auth = _auth;
-        this.user$ = user(this.auth).pipe(map(fireUser => {
-            console.log('fire user', fireUser);
-            this.user = this.fireUserToUserProfile(fireUser);
-            console.log('user profile', this.user);
-            return fireUser;
-        }));
+    }
+
+    private _user$: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
+    private _profile$: BehaviorSubject<UserProfile | null> = new BehaviorSubject<UserProfile | null>(null);
+
+    get user$(): Observable<User | null> {
+        return this._user$.asObservable();
+    }
+    get profile$(): Observable<UserProfile | null> {
+        return this._profile$.asObservable();
     }
 
     get isAuthenticated(): boolean {
-        return this.user !== undefined;
+        return this._user$.value !== null;
     }
 
     get missingUsername(): boolean {
-        return !this.user?.name;
+        return !this._profile$.value?.name;
+    }
+
+    get user() {
+        return this._user$.value;
+    }
+    get profile() {
+        return this._profile$.value;
+    }
+
+    set username(name: string){
+        this._profile$.next({
+            uid: this._user$.value!.uid,
+            name: name
+        } as UserProfile)
     }
 
     get accountComplete(): boolean {
         return this.isAuthenticated && !this.missingUsername;
     }
 
-    initialize(): Promise<boolean> {
+    initializeUser(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.user$.subscribe(user => {
-                resolve(true);
-            });
+            
+            user(this.auth)
+                .pipe(
+                    map(fireUser => {
+                        if (fireUser) {
+                            this._user$.next(fireUser);
+                        } else {
+                            this._user$.next(null);
+                            this._profile$.next(null);
+                        }
+                    }),
+                    catchError((err, caught) => {
+                        
+                        resolve(true);
+                        return throwError(err);
+                    })
+                )
+                .subscribe(value => {
+                    
+                    resolve(true);
+                });
         });
     }
 
-    logout() {
-        return defer(() => this.auth.signOut());
+    initializeProfile(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            if(this._user$.value){
+                this.backendService.readPlayerProfile(this._user$.value!.uid, undefined)
+                    .pipe(
+                        catchError((err, caught) => {
+                            resolve(true)
+                            return throwError(err);
+                        })
+                    )
+                    .subscribe(value => {
+                        this.username = value.nickname;
+                        resolve(true)
+                    });
+            } else {
+                resolve(true)
+            }
+        });
     }
 
-    /**
-     * Map Fire User to Bogglenc UserProfile
-     * @param user
-     * @private
-     */
-    private fireUserToUserProfile(user: User | null) {
-        if (!user) {
-            return undefined;
-        }
-        return {
-            uid: user.uid
-        } as UserProfile;
+    async logout() {
+        return await this.auth.signOut();
     }
 }
 
-export class UserProfile {
-    name!: string;
-    uid!: string;
+export interface UserProfile {
+    name: string | null;
+    uid: string;
 }

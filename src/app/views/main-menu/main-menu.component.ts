@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { LeaderBoardModalComponent } from '../../components/leader-board-modal/leader-board-modal.component';
 import { AuthService } from '../../services/auth.service';
 import { AuthModalComponent } from '../../components/auth-modal/auth-modal.component';
+import { AngularFireAnalytics } from '@angular/fire/compat/analytics';
 
 @Component({
     selector: 'app-main-menu',
@@ -24,7 +25,8 @@ export class MainMenuComponent {
                 private backendService: BackendService,
                 public authService: AuthService,
                 private router: Router,
-                private cdr: ChangeDetectorRef) {
+                private cdr: ChangeDetectorRef,
+                private analytics: AngularFireAnalytics) {
 
     }
 
@@ -33,6 +35,7 @@ export class MainMenuComponent {
     }
 
     actionNewGame() {
+        this.analytics.logEvent('main_menu#new_game' as any);
         this.inProgressActionNewGame$.next(true);
         this.backendService.startGame()
             .pipe(
@@ -60,16 +63,19 @@ export class MainMenuComponent {
 
     actionResumeGame() {
         if (this.existingGame) {
+            this.analytics.logEvent('main_menu#resume_game' as any);
             this.gameService.gameData = this.existingGame;
             this.router.navigate(['game'], { skipLocationChange: true });
         }
     }
 
     actionOpenMenu(): BsModalRef {
+        this.analytics.logEvent('main_menu#open_menu' as any)
         return this.modalService.show(MenuComponent);
     }
 
     actionLeaderBoard() {
+        this.analytics.logEvent('main_menu#leaderboard' as any);
         return this.modalService.show(LeaderBoardModalComponent);
     }
 

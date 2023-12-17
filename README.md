@@ -64,6 +64,10 @@ firebase use PROJECT_ID
 
 Igra preverja besede na portal [fran.si](https://fran.si). Pogosto množine samostalnikov tam ne najde (npr. garaže, čevlji, perice,...).
 
+### Angular Firebase
+
+https://github.com/angular/angularfire
+
 ---
 
 ## ☕ Časti avtorja [kafe](https://ko-fi.com/janmaselj)

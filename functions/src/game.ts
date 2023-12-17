@@ -54,6 +54,7 @@ export interface Game {
   words: PlayedWord[];
   assignedToPlayer: boolean;
   missedOpportunity: string | null;
+  possibleWords: number;
 }
 
 export interface GameEntity extends Game {
@@ -142,8 +143,11 @@ export function startGame(): Promise<Game> {
     playerUid: null,
     words: [],
     assignedToPlayer: false,
-    missedOpportunity: null
+    missedOpportunity: null,
+    possibleWords: 0,
   };
+  const suggested: string[] = getSuggestedWords(gameEntity);
+  gameEntity.possibleWords = suggested.length ?? 0;
   return db
     .collection('games')
     .doc(gameEntity.id)
@@ -231,9 +235,16 @@ export async function guessTheWord(
   };
 
   game.words.push(playedWord);
+  const suggested: string[] = getSuggestedWords(game);
+  game.possibleWords = suggested.length ?? 0;
   await gameDoc.ref.set(game);
 
   return { ...playedWord, game: entityToGame(game) };
+}
+
+function getSuggestedWords(game: GameEntity): string[] {
+  const boardChars = game.board.map(letter => letter.char).join('');
+  return dictionary.wordsByCharacters(boardChars);
 }
 
 export async function gameOver(gameId: string): Promise<Game> {
@@ -257,13 +268,14 @@ export async function gameOver(gameId: string): Promise<Game> {
     game.endedAndNamed = true;
     await playerService.updateTopGame(game);
   }
-
-  const boardChars = game.board.map(letter => letter.char).join('');
-  const suggested: string[] = dictionary.wordsByCharacters(boardChars)
-  // // sorted by longest first
-  suggested.sort((a, b) => b.length - a.length);
-  const pickedEntry = await pickSuggestion(game, suggested as string[]);
-  game.missedOpportunity = pickedEntry;
+  const suggested: string[] = getSuggestedWords(game);
+  if (suggested && suggested.length > 0) {
+    // sorted by longest first
+    suggested.sort((a, b) => b.length - a.length);
+    const pickedEntry = await pickSuggestion(game, suggested as string[]);
+    game.missedOpportunity = pickedEntry;
+  }
+  game.possibleWords = suggested.length ?? 0;
 
   await gameDoc.ref.set(game);
 

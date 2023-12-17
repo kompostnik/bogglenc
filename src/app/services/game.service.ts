@@ -70,6 +70,11 @@ export class GameService {
         return this.gameData?.missedWords;
     }
 
+    /**
+     * Retrieves the current word composed of selected Boggle letters in reverse order.
+     *
+     * @returns {string} The current word.
+     */
     get currentWord(): string {
         const boggleLettersBySelectedIndex = this.selectedByLastIndex;
         let currentWordInReverse = '';

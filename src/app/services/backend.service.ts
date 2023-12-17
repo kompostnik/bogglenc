@@ -22,6 +22,7 @@ export interface Game {
     topWordScore: number;
     assignedToPlayer: boolean;
     missedOpportunity: string | null;
+    possibleWords: number;
 }
 
 export interface CheckWordResult {

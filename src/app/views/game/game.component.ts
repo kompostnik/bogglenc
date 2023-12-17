@@ -5,6 +5,7 @@ import { BehaviorSubject, catchError, Subject, Subscription, throwError } from '
 import { BackendService, CheckWordResult } from '../../services/backend.service';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { AngularFireAnalytics } from '@angular/fire/compat/analytics';
 
 @Component({
     selector: 'app-game',
@@ -31,7 +32,8 @@ export class GameComponent implements OnInit, OnDestroy {
                 private backendService: BackendService,
                 private cdr: ChangeDetectorRef,
                 private router: Router,
-                public authService: AuthService) {
+                public authService: AuthService,
+                private analytics: AngularFireAnalytics) {
     }
 
     ngOnInit() {
@@ -48,6 +50,7 @@ export class GameComponent implements OnInit, OnDestroy {
                 this.gameService.persistGameData();
                 if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
                     this.gameState$.next(GameState.GAME_FINISHING);
+                    this.analytics.logEvent('game#game_over_time_limit' as any);
                 }
                 this.cdr.detectChanges();
             });
@@ -111,6 +114,8 @@ export class GameComponent implements OnInit, OnDestroy {
             .subscribe((check: CheckWordResult) => {
                 if (check.correct) {
                     this.wordCorrect(check);
+                    this.analytics.logEvent('game#word_guessed' as any, { word: this.gameService.currentWord } as any);
+                    this.analytics.logEvent('game#possible_words' as any, { words: check.game.possibleWords } as any);
                 } else {
                     this.wordIncorrect();
                 }
@@ -120,6 +125,7 @@ export class GameComponent implements OnInit, OnDestroy {
                 if (check.game.endedAt) {
                     this.inProgress$.next(true);
                     this.gameState$.next(GameState.GAME_FINISHED);
+                    this.analytics.logEvent('game#game_over_words_limit' as any);
                 }
             });
     }

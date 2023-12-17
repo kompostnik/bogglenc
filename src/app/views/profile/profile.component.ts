@@ -4,6 +4,7 @@ import { BehaviorSubject, catchError, Subscription, throwError } from 'rxjs';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { BackendService, Game } from '../../services/backend.service';
 import { BsModalService } from 'ngx-bootstrap/modal';
+import { AngularFireAnalytics } from '@angular/fire/compat/analytics';
 
 @Component({
     selector: 'app-profile',
@@ -27,7 +28,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 private router: Router,
                 private modalService: BsModalService,
                 public backendService: BackendService,
-                private cdr: ChangeDetectorRef) {}
+                private cdr: ChangeDetectorRef,
+                private analytics: AngularFireAnalytics) {}
 
     ngOnInit(): void {
         this.inProgress$.next(true);
@@ -38,6 +40,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this.myProfile = this.authService.isAuthenticated && this.profileId === this.authService.profile?.name;
             this.loadUserProfile();
         }
+        this.analytics.logEvent('profile' as any, { profileId: this.profileId } as any);
     }
 
     actionLogout() {
@@ -86,7 +89,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
                     })
                 )
                 .subscribe(data => {
-                    this.games = data
+                    this.games = data;
                     this.inProgress$.next(false);
                     this.cdr.detectChanges();
                 });

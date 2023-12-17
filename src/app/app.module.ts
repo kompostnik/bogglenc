@@ -31,23 +31,12 @@ import { AngularFireModule } from '@angular/fire/compat';
 import { AuthModalComponent } from './components/auth-modal/auth-modal.component';
 import { PlayerAvatarComponent } from './components/player-avatar/player-avatar.component';
 import { AppInitializer } from './services/app.initializer';
+import { getAnalytics, provideAnalytics } from '@angular/fire/analytics';
 
 const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
     signInFlow: 'popup',
     signInOptions: [
         firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        {
-            scopes: [
-                'public_profile',
-                'email'
-            ],
-            customParameters: {
-                'auth_type': 'reauthenticate'
-            },
-            provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID
-        },
-        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-        firebase.auth.GithubAuthProvider.PROVIDER_ID,
         {
             requireDisplayName: false,
             provider: firebase.auth.EmailAuthProvider.PROVIDER_ID
@@ -82,6 +71,7 @@ const firebaseUiAuthConfig: ExtendedFirebaseUIAuthConfig = {
     ],
     imports: [
         provideFirebaseApp(() => initializeApp(environment.firebase)),
+        provideAnalytics(() => getAnalytics()),
         provideAuth(() => {
             const auth = getAuth();
             if (isDevMode()) {

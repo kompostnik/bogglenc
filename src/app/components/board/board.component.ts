@@ -224,6 +224,7 @@ export class BoardComponent implements OnInit, OnDestroy {
         } as ModalOptions);
 
         bsModalRef.onHide!.subscribe(value => {
+            this.gameState$.next(GameState.GAME_FINISHED)
             this.cdr.detectChanges();
         });
     }

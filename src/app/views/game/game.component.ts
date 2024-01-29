@@ -1,62 +1,108 @@
-import {ChangeDetectorRef, Component, OnDestroy, OnInit} from '@angular/core';
-import {GameService} from "../../services/game.service";
-import {MenuComponent} from "../../components/menu/menu.component";
-import {BsModalService} from "ngx-bootstrap/modal";
-import {BehaviorSubject, catchError, Subject, throwError} from "rxjs";
-import {BackendService, CheckWordResult} from "../../services/backend.service";
-import {Router} from "@angular/router";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { GameService } from '../../services/game.service';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { BehaviorSubject, catchError, Subject, Subscription, throwError } from 'rxjs';
+import { BackendService, CheckWordResult } from '../../services/backend.service';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { AngularFireAnalytics } from '@angular/fire/compat/analytics';
+import { getAnalytics, logEvent } from '@angular/fire/analytics';
 
 @Component({
     selector: 'app-game',
     templateUrl: './game.component.html',
-    styleUrls: ['./game.component.scss']
+    styleUrls: ['./game.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GameComponent implements OnInit, OnDestroy {
 
-    inProgress$ = new BehaviorSubject<boolean>(false);
-    timeProgress$ = new BehaviorSubject<number>(0);
-    wordValid$ = new Subject<boolean>()
+    gameState$ = new BehaviorSubject<GameState | undefined>(undefined);
     gameOverConditionInSeconds = GameService.GAME_END_CONDITION_IN_SECONDS;
-    private timerInterval!: any
-    private applyChangesTimeout!: number;
+    inProgress$ = new BehaviorSubject<boolean>(false);
+    wordValid$ = new Subject<boolean>();
+    wordLengthLimit = GameService.GAME_WORD_LENGTH_LIMIT;
+    gameTick$ = new BehaviorSubject<number>(0);
+    private timerInterval!: any;
+    private inProgressSubscription!: Subscription;
+    private gameTickSubscription!: Subscription;
+    private gameStateSubscription!: Subscription;
+    private userSubscription!: Subscription;
 
     constructor(public gameService: GameService,
                 private modalService: BsModalService,
                 private backendService: BackendService,
                 private cdr: ChangeDetectorRef,
-                private router: Router) {
+                private router: Router,
+                public authService: AuthService,
+                private analytics: AngularFireAnalytics) {
     }
 
     ngOnInit() {
-        if (this.gameService.gameData?.timerProgress) {
-            this.timeProgress$.next(this.gameService.gameData.timerProgress);
-            this.resumeTimer();
+        if (this.gameService.gameData?.game.assignedToPlayer) {
+            this.gameState$.next(GameState.GAME_SUBMITTED);
+        } else if (this.gameService.gameData?.game.endedAt) {
+            this.gameState$.next(GameState.GAME_FINISHED);
         } else {
-            this.createTimer();
+            this.gameState$.next(GameState.GAME_ACTIVE);
+
+            // on 1 second interval, this observable will broadcast
+            this.gameTickSubscription = this.gameTick$.subscribe(value => {
+                this.gameService.gameData!.timerProgress += 1;
+                this.gameService.persistGameData();
+                if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
+                    this.gameState$.next(GameState.GAME_FINISHING);
+                    logEvent(getAnalytics(),'game#game_over_time_limit' as any);
+                }
+                this.cdr.detectChanges();
+            });
         }
 
-        // function to subscribe to inProgress BehaviorSubject
-        this.inProgress$.subscribe(value => {
-            if (value) {
+        this.gameStateSubscription = this.gameState$.subscribe(gameState => {
+            if (gameState === GameState.GAME_ACTIVE) {
+                this.startTimer();
+            } else if (gameState === GameState.WORD_IN_SUBMISSION) {
                 this.pauseTimer();
-            } else {
-                this.resumeTimer();
+            } else if (gameState === GameState.GAME_FINISHING) {
+                this.pauseTimer();
+                this.handleGameOverCondition();
+            } else if (gameState === GameState.GAME_FINISHED) {
+                this.pauseTimer();
+                this.submitGame();
             }
-        })
+        });
+
+
+        this.userSubscription = this.authService.profile$.subscribe((value) => {
+
+            if (this.gameState$.value === GameState.GAME_FINISHED && this.authService.accountComplete) {
+                this.submitGame();
+            }
+        });
     }
 
-    actionOpenMenu() {
-        return this.modalService.show(MenuComponent);
+    actionExitGame() {
+        this.router.navigate([''], { skipLocationChange: true });
     }
 
     ngOnDestroy(): void {
         clearInterval(this.timerInterval);
+        if (this.inProgressSubscription) {
+            this.inProgressSubscription.unsubscribe();
+        }
+        if (this.gameTickSubscription) {
+            this.gameTickSubscription.unsubscribe();
+        }
+        if (this.gameStateSubscription) {
+            this.gameStateSubscription.unsubscribe();
+        }
+        if (this.userSubscription) {
+            this.userSubscription.unsubscribe();
+        }
     }
 
     handleWordSubmittedEvent(selectedLetterIndexes: number[]) {
+        this.gameState$.next(GameState.WORD_IN_SUBMISSION);
         this.inProgress$.next(true);
-        this.pauseTimer();
-        this.cdr.detectChanges();
 
         this.backendService.guessTheWord(this.gameService.gameData!.game.id, selectedLetterIndexes)
             .pipe(
@@ -69,6 +115,8 @@ export class GameComponent implements OnInit, OnDestroy {
             .subscribe((check: CheckWordResult) => {
                 if (check.correct) {
                     this.wordCorrect(check);
+                    logEvent(getAnalytics(),'game#word_guessed' as any, { word: this.gameService.currentWord } as any);
+                    logEvent(getAnalytics(),'game#possible_words' as any, { words: check.game.possibleWords } as any);
                 } else {
                     this.wordIncorrect();
                 }
@@ -77,42 +125,34 @@ export class GameComponent implements OnInit, OnDestroy {
                 // server returns game with endedAt field if game is over
                 if (check.game.endedAt) {
                     this.inProgress$.next(true);
-                    this.router.navigate(['game-over'], {skipLocationChange: true})
+                    this.gameState$.next(GameState.GAME_FINISHED);
+                    logEvent(getAnalytics(),'game#game_over_words_limit' as any);
                 }
             });
     }
 
     private wordIncorrect() {
         this.cdr.detectChanges();
-        this.gameService.missedWords?.push(this.gameService.currentWord)
+        this.gameService.missedWords?.push(this.gameService.currentWord);
         this.wordValid$.next(false);
         this.inProgress$.next(false);
-    }
-
-    private createTimer() {
-        this.gameService.gameData!.timerProgress = 0;
-        this.resumeTimer();
+        if(this.gameState$.value === GameState.WORD_IN_SUBMISSION) {
+            this.gameState$.next(GameState.GAME_ACTIVE);
+        }
     }
 
     private pauseTimer() {
         clearInterval(this.timerInterval);
     }
 
-    private resumeTimer() {
+    private startTimer() {
         if (this.timerInterval) {
-            this.pauseTimer()
+            this.pauseTimer();
         }
 
         this.timerInterval = setInterval(() => {
-            this.gameService.gameData!.timerProgress += 1;
-            this.gameService.persistGameData();
-            if (this.gameService.gameData!.timerProgress >= this.gameOverConditionInSeconds) {
-                this.handleGameOverCondition();
-            } else {
-                this.timeProgress$.next(this.gameService.gameData!.timerProgress);
-            }
-
-        }, GameService.GAME_TIME_OUT_MILIS)
+            this.gameTick$.next(this.gameService.gameData!.timerProgress);
+        }, GameService.GAME_TIME_OUT_MILIS);
     }
 
     private handleGameOverCondition() {
@@ -127,23 +167,52 @@ export class GameComponent implements OnInit, OnDestroy {
             )
             .subscribe(value => {
                 this.gameService.gameData!.game = value;
-                this.gameService.persistGameData()
-                this.router.navigate(['game-over'], {skipLocationChange: true})
-            })
+                this.gameService.persistGameData();
+                this.gameState$.next(GameState.GAME_FINISHED);
+                this.cdr.detectChanges();
+            });
+    }
+
+    private navigateToGameOverScreen() {
+        this.router.navigate(['game-over'], { skipLocationChange: true });
     }
 
     private wordCorrect(check: CheckWordResult) {
-        this.applyChangesTimeout = setTimeout(() => {
+        this.gameService.gameData!.timerProgress = Math.max(this.gameService.gameData!.timerProgress - this.gameService.timeBonusByWord(), 0);
+        this.gameService.guessedWords?.push(this.gameService.currentWord);
+        this.wordValid$.next(true);
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
             // wait for animation to apply changes
             this.gameService.applyBackendGame(check.game);
             this.inProgress$.next(false);
             this.cdr.detectChanges();
+            if(this.gameState$.value === GameState.WORD_IN_SUBMISSION) {
+                this.gameState$.next(GameState.GAME_ACTIVE);
+            }
         }, 700);
-        this.gameService.guessedWords?.push(this.gameService.currentWord)
-        this.wordValid$.next(true);
-        this.gameService.gameData!.timerProgress = Math.max(this.gameService.gameData!.timerProgress - this.gameService.timeBonusByWord(), 0);;
-        this.timeProgress$.next(this.gameService.gameData!.timerProgress);
-        this.cdr.detectChanges();
     }
 
+    private submitGame() {
+        if (this.gameService.gameData?.game.name) {
+            this.gameState$.next(GameState.GAME_SUBMITTED);
+            this.cdr.detectChanges();
+        } else if (this.authService.accountComplete && this.authService.user!.uid && this.gameService.gameData!.game!.score > 0) {
+            this.gameState$.next(GameState.GAME_SUBMITTING);
+            this.backendService.assignGameToPlayer(this.gameService.gameData!.game!.id, this.authService.user!.uid)
+                .subscribe(value => {
+                    this.gameService.gameData!.game = value;
+                    this.gameService.persistGameData();
+                    this.gameState$.next(GameState.GAME_SUBMITTED);
+                    this.cdr.detectChanges();
+                });
+        } else {
+            this.gameState$.next(GameState.GAME_FINISHED_NO_SUBMIT)
+        }
+    }
+}
+
+export enum GameState {
+    GAME_ACTIVE, WORD_IN_SUBMISSION, GAME_FINISHING, GAME_FINISHED, GAME_SUBMITTING, GAME_SUBMITTED, GAME_FINISHED_NO_SUBMIT
 }

@@ -1,0 +1,89 @@
+<div class="d-flex justify-content-between">
+    <div>
+        <h1 *ngIf="myProfile">Moj Profil</h1>
+        <h1 *ngIf="!myProfile">Profil {{profileId}}</h1>
+    </div>
+</div>
+
+<ng-container *ngIf="inProgress$ | async">
+    <div class="alert alert-secondary text-center">
+        Nalagam profila
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+    </div>
+</ng-container>
+
+<ng-container *ngIf="!(inProgress$ | async)">
+
+    <div class="row">
+        <div class="col d-flex justify-content-between">
+            <button
+                [routerLink]="''"
+                aria-label="Nazaj v Meni"
+                class="btn btn-outline-secondary"
+                type="button"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Nazaj v Meni
+            </button>
+            <button
+                (click)="actionLogout()"
+                *ngIf="myProfile"
+                aria-label="Odjavi se"
+                class="btn btn-secondary"
+                type="button"
+            >
+                <i class="bi bi-dash-circle"></i> Odjavi se
+            </button>
+        </div>
+    </div>
+    <div *ngIf="userProfile" class="row mt-3">
+        <div class="col-4">
+            <h5>Avatar</h5>
+            <app-player-avatar
+                [seed]="userProfile.name" [height]="100"></app-player-avatar>
+        </div>
+        <div class="col">
+            <h5>Vzdevek</h5>
+            <span class="text-uppercase">{{userProfile.name}}</span>
+        </div>
+    </div>
+    <div *ngIf="userProfile" class="row mt-3">
+        <div class="col">
+            <h5>Seznam iger</h5>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            <i class="bi bi-record-circle me-1"></i>
+                            Točke
+                        </th>
+                        <th>
+                            <i class="bi bi-cup-straw"></i>
+                            Št. Besed
+                        </th>
+                        <th>
+                            <i class="bi bi-book"></i>
+                            Top Geslo
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let game of games; let index = index">
+                        <td>{{game.score}}</td>
+                        <td>{{game.wordCount}}</td>
+                        <td>
+                            <a class="d-inline-block p-1 me-1" href="https://fran.si/iskanje?View=1&Query={{game.topWord}}"
+                               target="_blank">
+                                {{game.topWord}}
+                            </a><span class="top-word-score">(<i class="bi bi-record-circle me-1"></i> {{game.topWordScore}})</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div *ngIf="!games || games.length === 0" class="alert alert-secondary text-center">
+                Ni zabeleženih iger
+            </div>
+        </div>
+    </div>
+</ng-container>

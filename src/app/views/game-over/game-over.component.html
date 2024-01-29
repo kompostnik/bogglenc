@@ -1,48 +1,85 @@
-<div *ngIf="endByWordCount" class="text-center">
-    <h2 aria-hidden="true">
-        <i class="bi bi-emoji-sunglasses me-2"></i>
-        <i class="bi bi-emoji-sunglasses me-2"></i>
-        <i class="bi bi-emoji-sunglasses"></i>
-    </h2>
-    <h2>
-        {{GameService.GAME_WORDS_LIMIT}} odkritih besed!
-    </h2>
-</div>
-<div *ngIf="!enteredToLeaderBoard" class="text-center">
-    <h2><i class="bi bi-emoji-dizzy"></i> Konec igre ({{gameService.score}})</h2>
-    <p>Premalo pik za uvrstitev na lestvico. Poskusi ponovno!</p>
-</div>
-<div *ngIf="enteredToLeaderBoard" class="text-center">
-    <h2><i class="bi bi-emoji-laughing"></i> Čestitke za uvrstitev na {{gameService.gameData!.game.leaderboardRank}}.
-        mesto! ({{gameService.score}})</h2>
-    <button (click)="actionOpenLeaderBoardForm()"
-            *ngIf="!gameService.gameData!.game.name"
-            class="btn btn-primary text-white btn-lg mt-3"
-            type="button">
-        <i aria-hidden="true" class="bi bi-trophy"></i> Vpiši se med zmagovalce
-    </button>
+<ng-container *ngIf="gameOverState$.value === GameOverState.LOADING_GAMES">
+    <div class="alert alert-secondary text-center">
+        Pridobivam seznam iger
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+    </div>
+</ng-container>
 
-    <app-victory-confetti></app-victory-confetti>
-</div>
-<div class="text-center">
-    <div class="mt-4">
-        <button (click)="actionBackToMainMenu()"
-                class="btn btn-secondary me-3"
-                type="button">
-            Nazaj v glavni meni
+<ng-container *ngIf="gameOverState$.value !== GameOverState.LOADING_GAMES">
+
+    <div *ngIf="gameOverType === GameOverType.WORDS_LIMIT" class="text-center">
+        <h2 aria-hidden="true">
+            <i class="bi bi-emoji-sunglasses me-2"></i>
+            <i class="bi bi-emoji-sunglasses me-2"></i>
+            <i class="bi bi-emoji-sunglasses"></i>
+        </h2>
+        <h2>
+            {{GameService.GAME_WORDS_LIMIT}} odkritih besed!
+        </h2>
+    </div>
+
+    <div
+        class="text-center"
+    >
+
+        <h2>
+            <i class="bi bi-record-circle me-1"></i>
+            {{gameService.score}}
+        </h2>
+
+        <button
+            (click)="actionOpenAuthModal()"
+            *ngIf="!authService.accountComplete && !gameService.gameData!.game.name"
+            class="btn btn-primary text-white btn-lg mt-3"
+            type="button"
+        >
+            Zabeleži igro
         </button>
 
-        <button (click)="actionOpenAchievementsModal()"
-                [attr.aria-label]="'Dosežki'"
-                class="btn btn-outline-secondary position-relative goals"
-                type="button">
+        <app-victory-confetti></app-victory-confetti>
+    </div>
+
+</ng-container>
+
+
+<div class="row mt-4">
+    <div class="col d-flex justify-content-between">
+
+        <button
+            [routerLink]="''"
+            aria-label="Nastavitve"
+            class="btn btn-outline-secondary"
+            type="button"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Nazaj v Meni
+        </button>
+
+        <button
+            (click)="actionOpenAchievementsModal()"
+            [attr.aria-label]="'Dosežki'"
+            class="btn btn-outline-secondary position-relative goals"
+            type="button"
+        >
             <div aria-hidden="true" class="d-flex">
-                <i class="bi bi-trophy"></i> <span
-                    class="ms-2 d-none d-lg-block">Dosežki</span>
+                <i class="bi bi-trophy"></i>
+                <span
+                    class="ms-2 d-none d-lg-block"
+                >Besede</span>
             </div>
         </button>
     </div>
 </div>
+
 <div class="mt-4">
-    <app-leader-board></app-leader-board>
+    <ng-container *ngIf="gameOverState$.value === GameOverState.ASSIGNING_GAME_TO_PLAYER">
+        <div class="alert alert-secondary text-center">
+            Beležim zapis na lestvico
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+        </div>
+    </ng-container>
+
+    <ng-container *ngIf="gameOverState$.value !== GameOverState.ASSIGNING_GAME_TO_PLAYER">
+        <app-leader-board [games]="games$.value || []"></app-leader-board>
+    </ng-container>
 </div>

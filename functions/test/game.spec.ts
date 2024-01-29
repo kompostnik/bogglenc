@@ -2,10 +2,11 @@ import './test-init';
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import * as gameFunctions from '../src/game';
-import { Game } from '../src/game';
+import { Game, GameEntity } from '../src/game';
 import { db } from '../src/admin';
-import { useFran } from '../src/word';
 import * as crypto from 'crypto';
+import { dictionary } from '../src/dictionary';
+import * as playerService from '../src/player';
 
 describe('game tests', () => {
   it('startGame', async () => {
@@ -54,9 +55,7 @@ describe('game tests', () => {
     const [word, letterIndexes] = await mockWord(game, 'wrong');
 
     // Act
-    useFran(false);
     const result = await gameFunctions.guessTheWord(game.id, letterIndexes);
-    useFran(true);
 
     // Assert
     expect(result.word).to.equal(word);
@@ -84,12 +83,14 @@ describe('game tests', () => {
 
   it('guessTheWord game ends', async () => {
     // Arrange
-    const game = await gameFunctions.startGame().then(async (game) => {
-      game.wordCount = 99;
-      game.score = 100;
-      await db.collection('games').doc(game.id).set(game);
-      return game;
-    });
+    const game = await gameFunctions.startGame();
+    const gameEntity: GameEntity = {
+      ...game,
+      playerUid: null,
+      wordCount: 99,
+      score: 100,
+    };
+    await db.collection('games').doc(game.id).set(gameEntity);
     const [_, letterIndexes] = await mockWord(game);
 
     // Act
@@ -105,8 +106,10 @@ describe('game tests', () => {
     await gameFunctions.guessTheWord(game.id, letterIndexes);
     const endedGame = await gameFunctions.gameOver(game.id);
 
-    const playerName = `Testko ${crypto.randomUUID().slice(-6)}`;
-    await gameFunctions.submitName(game.id, playerName);
+    const playerUid = crypto.randomUUID().slice(-6);
+    const playerName = `Testko_${playerUid}`;
+    await playerService.submitProfile(playerUid, playerName);
+    await gameFunctions.assignToPlayer(game.id, playerUid);
 
     // Act
     const leaderboard = await gameFunctions.getLeaderboard();
@@ -120,11 +123,37 @@ describe('game tests', () => {
       expect(item.endedAt).to.be.a('number');
       expect(item.endedAndNamed).to.be.true;
     });
+
+    const playerProfile = await playerService.readProfile(playerName);
+    expect(playerProfile?.topGame?.id).to.equal(game.id);
+    expect(playerProfile?.topGame?.score).to.equal(endedGame.score);
+  });
+
+  it('getPlayerLeaderboard', async () => {
+    // Arrange
+    const game = await gameFunctions.startGame();
+    const [_, letterIndexes] = await mockWord(game);
+    await gameFunctions.guessTheWord(game.id, letterIndexes);
+    const endedGame = await gameFunctions.gameOver(game.id);
+
+    const playerUid = crypto.randomUUID().slice(-6);
+    const playerName = `Testko_${playerUid}`;
+    await playerService.submitProfile(playerUid, playerName);
+    await gameFunctions.assignToPlayer(game.id, playerUid);
+
+    // Act
+    const leaderboard = await gameFunctions.getPlayerLeaderboard(playerName);
+
+    // Assert
+    expect(leaderboard.length).to.be.equal(1);
+    const leaderboardEntry = leaderboard[0];
+    expect(leaderboardEntry?.name).to.equal(playerName);
+    expect(leaderboardEntry?.score).to.equal(endedGame.score);
   });
 });
 
 /**
- * Reads the first 5 letters from the game board, caches them as a word and
+ * Reads the first 5 letters from the game board, optionally adds them to the dictionary and
  * returns their indexes.
  */
 async function mockWord(
@@ -135,12 +164,8 @@ async function mockWord(
     .slice(0, 5)
     .map((letter) => letter.char)
     .join('');
-  if (type !== 'wrong') {
-    await db.collection('words').doc(word).set({
-      value: word,
-      source: 'game.spec.ts',
-      cachedSince: new Date().getTime(),
-    });
+  if (type === 'correct') {
+    dictionary.addWord(word);
   }
   return [word, [0, 1, 2, 3, 4]];
 }

@@ -1,12 +1,14 @@
-import {Component} from '@angular/core';
-import {GameService} from "../../services/game.service";
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-score',
   templateUrl: './score.component.html',
-  styleUrls: ['./score.component.scss']
+  styleUrls: ['./score.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ScoreComponent {
 
-  constructor(public gameService: GameService) { }
+  @Input()
+  score = 0;
+  constructor() { }
 }

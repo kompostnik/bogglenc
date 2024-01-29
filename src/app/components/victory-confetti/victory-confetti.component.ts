@@ -1,9 +1,10 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 
 @Component({
     selector: 'app-victory-confetti',
     templateUrl: './victory-confetti.component.html',
-    styleUrls: ['./victory-confetti.component.scss']
+    styleUrls: ['./victory-confetti.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VictoryConfettiComponent implements OnDestroy, OnInit {
     private timeout: any;

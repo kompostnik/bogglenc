@@ -1,5 +1,6 @@
 tr {
   height: 50px;
+  cursor: pointer;
 
   td {
     vertical-align: middle;
@@ -19,12 +20,15 @@ tr {
   }
 }
 
-i {
-  color: white;
-}
 th:first-child{
   text-align: start;
 }
 th:last-child {
   text-align: end;
+}
+
+tr.bg-primary{
+  td, a {
+    color: white;
+  }
 }

@@ -1,11 +1,12 @@
-import {Injectable} from '@angular/core';
-import {Subject} from "rxjs";
-import {BackendService, Game, Letter} from "./backend.service";
+import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
+import { Game, Letter } from './backend.service';
 
 export interface BoggleLetter extends Letter {
     selected: boolean
     selectedIndex: number
     boardIndex: number
+    inWarning: boolean
 }
 
 export interface GameSettings {
@@ -29,43 +30,14 @@ export class GameService {
     public static GAME_TIME_OUT_MILIS = 1000;
     public static GAME_WORDS_LIMIT = 100;
     public static GAME_END_CONDITION_IN_SECONDS = 100;
+    public static GAME_WORD_LENGTH_LIMIT = 3;
     public static BOARD_SIZE = 16;
     public static LOCAL_STORAGE_GAME_DATA = 'gameDataV2';
     public static LOCAL_STORAGE_GAME_SETTINGS = 'gameSettings';
 
-    letterValues: { [key: string]: number } = {
-        'a': 0,
-        'b': 0,
-        'c': 0,
-        'č': 0,
-        'd': 0,
-        'e': 0,
-        'f': 0,
-        'g': 0,
-        'h': 0,
-        'i': 0,
-        'j': 0,
-        'k': 0,
-        'l': 0,
-        'm': 0,
-        'n': 0,
-        'o': 0,
-        'p': 0,
-        'r': 0,
-        's': 0,
-        'š': 0,
-        't': 0,
-        'u': 0,
-        'v': 0,
-        'z': 0,
-        'ž': 0,
-    };
     gameSettings: GameSettings = {} as GameSettings
     leaderBoardFormSubject$ = new Subject<any>();
     beforeInstallPrompt: any;
-
-    constructor(private backendService: BackendService) {
-    }
 
     private _gameData!: GameData | undefined;
 
@@ -90,7 +62,7 @@ export class GameService {
         return this.gameData?.game.score;
     }
 
-    get guessedWords() {
+    get guessedWords(): string[] | undefined {
         return this.gameData?.guessedWords;
     }
 
@@ -98,6 +70,11 @@ export class GameService {
         return this.gameData?.missedWords;
     }
 
+    /**
+     * Retrieves the current word composed of selected Boggle letters in reverse order.
+     *
+     * @returns {string} The current word.
+     */
     get currentWord(): string {
         const boggleLettersBySelectedIndex = this.selectedByLastIndex;
         let currentWordInReverse = '';
@@ -173,7 +150,8 @@ export class GameService {
                 ...{
                     selected: false,
                     selectedIndex: 0,
-                    boardIndex: index
+                    boardIndex: index,
+                    inWarning: false
                 }}
         });
 

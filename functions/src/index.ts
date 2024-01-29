@@ -1,29 +1,7 @@
 import * as functions from 'firebase-functions';
-import * as cors from 'cors';
-import * as wordService from './word';
+import cors from 'cors';
 import * as gameService from './game';
-
-/**
- * @deprecated kept to support the older version of frontend
- */
-export const wordCheck = functions
-  .region('europe-west1')
-  .https.onRequest((req, res) => {
-    cors()(req, res, async () => {
-      const wordParam = (req.query.word as string) ?? '';
-      const word = wordParam.trim().toLowerCase();
-
-      const checkedWord = await wordService.checkWord(word);
-
-      if (checkedWord) {
-        functions.logger.info(`Word is valid: ${word}`);
-        res.status(200).send(checkedWord.value);
-      } else {
-        functions.logger.info(`Word is not valid: ${word}`);
-        res.status(400).send('Wrong guess!');
-      }
-    });
-  });
+import * as playerService from './player';
 
 /**
  * Starts a new game.
@@ -97,31 +75,6 @@ export const guessTheWord = functions
   });
 
 /**
- * Verifies a word and updates the game state.
- * Use POST or PUT.
- * Expected request body:
- * <pre>
- * { gameId: string; name: string }
- * </pre>
- *
- * @returns {Game}
- */
-export const submitName = functions
-  .region('europe-west1')
-  .https.onRequest((req, res) => {
-    cors()(req, res, async () => {
-      const requestData = req.body as { gameId: string; name: string };
-
-      const game = await gameService.submitName(
-        requestData.gameId,
-        requestData.name,
-      );
-
-      res.status(200).send(game);
-    });
-  });
-
-/**
  * List up to 50 top games where names were submitted.
  * Use GET
  * @returns {Game[]}
@@ -132,5 +85,139 @@ export const getLeaderboard = functions
     cors()(req, res, async () => {
       const leaderboard = await gameService.getLeaderboard();
       res.status(200).send(leaderboard);
+    });
+  });
+
+/**
+ * Reads a player's profile
+ * Use POST or PUT.
+ * Expected request body:
+ * <pre>
+ * { uid: string;  nickname: string; }
+ * </pre>
+ *
+ * @returns {PlayerProfile}
+ *  or HTTP status 404 if profile does not exist
+ */
+export const readPlayerProfile = functions
+  .region('europe-west1')
+  .https.onRequest((req, res) => {
+    cors()(req, res, async () => {
+      const requestData = req.body as {
+        uid: string;
+        nickname: string;
+      };
+
+      functions.logger.info('Reading player profile: ', requestData);
+
+      let result;
+      if(requestData.uid){
+        result = await playerService.readProfileByUid(requestData.uid);
+      } else {
+        result = await playerService.readProfile(requestData.nickname);
+      }
+
+      if (result) {
+        res.status(200).send(result);
+      } else {
+        res.status(404).send();
+      }
+    });
+  });
+
+/**
+ * Creates or updates a player's profile.
+ * Use POST or PUT.
+ * Expected request body:
+ * <pre>
+ * { uid: string; nickname: string; }
+ * </pre>
+ *
+ * @returns {PlayerProfile}
+ *  or HTTP status 409 if nickname is taken
+ *  or HTTP status 400 if nickname is not valid (length, allowed characters)
+ */
+export const submitPlayerProfile = functions
+  .region('europe-west1')
+  .https.onRequest((req, res) => {
+    cors()(req, res, async () => {
+      const requestData = req.body as {
+        uid: string;
+        nickname: string;
+      };
+
+      functions.logger.info('Submitting player profile: ', requestData);
+
+      try {
+        const result = await playerService.submitProfile(
+          requestData.uid,
+          requestData.nickname,
+        );
+        res.status(200).send(result);
+      } catch (err) {
+        if (err === playerService.ERR_NICKNAME_TAKEN) {
+          res.status(409).send(err);
+        } else if (err === playerService.ERR_NICKNAME_INVALID) {
+          res.status(400).send(err);
+        }
+      }
+    });
+  });
+
+/**
+ * Associates a game with a player
+ * Use POST or PUT.
+ * Expected request body:
+ * <pre>
+ * { gameId: string; playerUid: string; }
+ * </pre>
+ *
+ * @returns {Game}
+ */
+export const assignGameToPlayer = functions
+  .region('europe-west1')
+  .https.onRequest((req, res) => {
+    cors()(req, res, async () => {
+      const requestData = req.body as {
+        gameId: string;
+        playerUid: string;
+      };
+
+      functions.logger.info('Assigning game to player: ', requestData);
+
+      const result = await gameService.assignToPlayer(
+        requestData.gameId,
+        requestData.playerUid,
+      );
+
+      functions.logger.info('Assigned game to player: ', result);
+
+      res.status(200).send(result);
+    });
+  });
+
+/**
+ * Lists player's 10 best games.
+ * Use POST or PUT.
+ * Expected request body:
+ * <pre>
+ * { nickname: string; }
+ * </pre>
+ *
+ * @returns {Game[]}
+ */
+export const getPlayerLeaderboard = functions
+  .region('europe-west1')
+  .https.onRequest((req, res) => {
+    cors()(req, res, async () => {
+      const requestData = req.body as {
+        nickname: string;
+      };
+
+      const result = await gameService.getPlayerLeaderboard(
+        requestData.nickname,
+      );
+
+      res.status(200).send(result);
     });
   });

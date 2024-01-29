@@ -1,7 +1,8 @@
-import {environment} from "../../environments/environment";
-import {Injectable} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
-import {Observable} from "rxjs";
+import { environment } from '../../environments/environment';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { PlayerProfile } from '../../../functions/src/player';
 
 export interface Letter {
     char: string;
@@ -17,6 +18,11 @@ export interface Game {
     name: string | null;
     startedAt: number;
     endedAt: number | null;
+    topWord: string | null;
+    topWordScore: number;
+    assignedToPlayer: boolean;
+    missedOpportunity: string | null;
+    possibleWords: number;
 }
 
 export interface CheckWordResult {
@@ -55,5 +61,24 @@ export class BackendService {
     gameOver(gameId: string): Observable<Game> {
         const payload = { gameId: gameId }
         return this.httpClient.post(`${environment.backendPath}/gameOver`, payload, {responseType: "json"}) as Observable<Game>
+    }
+
+    readPlayerProfile(uid: string | null | undefined,  nickname: string | null | undefined): Observable<PlayerProfile>{
+        const payload = { uid: uid, nickname: nickname }
+        return this.httpClient.post(`${environment.backendPath}/readPlayerProfile`, payload, {responseType: "json"}) as Observable<PlayerProfile>
+    }
+
+    getPlayerLeaderboard(nickname: string): Observable<Game[]>{
+        const payload = { nickname: nickname }
+        return this.httpClient.post(`${environment.backendPath}/getPlayerLeaderboard`, payload, {responseType: "json"}) as Observable<Game[]>
+    }
+
+    submitPlayerProfile(uid: string,  nickname: string): Observable<PlayerProfile>{
+        const payload = { uid: uid, nickname: nickname }
+        return this.httpClient.post(`${environment.backendPath}/submitPlayerProfile`, payload, {responseType: "json"}) as Observable<PlayerProfile>
+    }
+    assignGameToPlayer(gameId: string, userUid: string): Observable<Game>{
+        const payload = { playerUid: userUid, gameId: gameId }
+        return this.httpClient.post(`${environment.backendPath}/assignGameToPlayer`, payload, {responseType: "json"}) as Observable<Game>
     }
 }

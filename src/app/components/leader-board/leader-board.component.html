@@ -1,27 +1,48 @@
-<div class="d-flex justify-content-center">
+<div class="">
     <div class="container-small">
-        <div *ngIf="inProgress" class="spinner-border spinner-border-sm" role="status"></div>
+        <ng-container *ngIf="inProgress">
+            <div class="alert alert-secondary text-center">
+                Pridobivam seznam iger <div class="spinner-border spinner-border-sm" role="status"></div>
+            </div>
+        </ng-container>
 
-        <table class="table table-striped">
-            <thead>
-            <th class="col-2">Rank</th>
-            <th class="col-6">Igralec</th>
-            <th class="col-2">Točke</th>
-            </thead>
-            <tbody>
-            <tr
-                    *ngFor="let game of games; let index = index"
-                    [class.bg-primary]="isCurrentGame(game)"
-                    [class.text-white]="isCurrentGame(game)"
-                    [class.victory]="isCurrentGame(game)"
-                    id="{{index}}">
-                <td>{{index + 1}}</td>
-                <td>
-                    <span class="text-uppercase">{{game.name}}</span>
-                </td>
-                <td>{{game.score}}</td>
-            </tr>
-            </tbody>
-        </table>
+        <ng-container *ngIf="!inProgress">
+            <table *ngIf="!inProgress" class="table table-striped">
+                <thead>
+                    <th class="col-1">Rank</th>
+                    <th class="col" colspan="2">Igralec</th>
+                    <th class="col-3">
+                        <i class="bi bi-record-circle me-1"></i>
+                        Točke
+                    </th>
+                </thead>
+                <tbody>
+                    <tr
+                        (click)="actionNavigateToProfile(game.name)"
+                        *ngFor="let game of games; let index = index"
+                        [class.bg-primary]="isCurrentGame(game)"
+                        [class.text-white]="isCurrentGame(game)"
+                        [class.victory]="isCurrentGame(game)"
+                        id="{{index}}"
+                    >
+                        <td>{{index + 1}}</td>
+                        <td>
+                            <app-player-avatar
+                                [height]="50" [seed]="game.name"
+                            ></app-player-avatar>
+                        </td>
+                        <td>
+                            <a [routerLink]="['../profile', game.name]" class="text-uppercase">{{game.name}}</a>
+                        </td>
+                        <td>
+                            {{game.score}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div *ngIf="!games || games.length === 0" class="alert alert-secondary text-center">
+                Ni zabeleženih iger
+            </div>
+        </ng-container>
     </div>
 </div>

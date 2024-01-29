@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "boggelnc"
-  }
+  },
+  "targets": {
+    "bogglenc-cd470": {
+      "hosting": {
+        "bogglenc": [
+          "bogglenc"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

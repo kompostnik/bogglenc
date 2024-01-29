@@ -1,23 +1,29 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {BsModalService} from "ngx-bootstrap/modal";
-import {GameService} from "../../services/game.service";
-import {catchError, Subscription, throwError} from "rxjs";
-import {BackendService, Game} from "../../services/backend.service";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { GameService } from '../../services/game.service';
+import { catchError, Subscription, throwError } from 'rxjs';
+import { BackendService, Game } from '../../services/backend.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-leader-board',
     templateUrl: './leader-board.component.html',
-    styleUrls: ['./leader-board.component.scss']
+    styleUrls: ['./leader-board.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LeaderBoardComponent implements OnInit, OnDestroy {
     numbers = Array(50).fill(0).map((x, i) => i);
+    @Input()
     games: Game[] = [];
     inProgress = false;
     private leaderBoardFormSubscription!: Subscription;
 
     constructor(private modalService: BsModalService,
+                private bsModalRef: BsModalRef,
                 public gameService: GameService,
-                public backendService: BackendService) {
+                public backendService: BackendService,
+                private cdr: ChangeDetectorRef,
+                private router: Router) {
     }
 
     ngOnInit() {
@@ -33,12 +39,25 @@ export class LeaderBoardComponent implements OnInit, OnDestroy {
         this.leaderBoardFormSubscription.unsubscribe();
     }
 
+    isCurrentGame(game: Game): boolean {
+        if (this.gameService.gameData && this.gameService.gameData.game) {
+            return game.id === this.gameService.gameData.game.id;
+        }
+        return false;
+    }
+
+    actionNavigateToProfile(profile: string | null) {
+        this.bsModalRef.hide();
+        this.router.navigate(['profile', profile]);
+    }
+
     private fetchLeaderBoard() {
         this.inProgress = true;
         this.backendService.getLeaderBoard()
             .pipe(
                 catchError(err => {
                     this.inProgress = false;
+                    this.cdr.detectChanges();
                     console.log('Handling error locally and rethrowing it...', err);
                     return throwError(err);
                 })
@@ -46,20 +65,14 @@ export class LeaderBoardComponent implements OnInit, OnDestroy {
             .subscribe(data => {
                 this.games = data as any[];
                 this.inProgress = false;
-            })
+                this.cdr.detectChanges();
+            });
     }
 
     private scrollToRank() {
-        const element = document.getElementById(`${this.gameService.gameData!.game.leaderboardRank}`)
+        const element = document.getElementById(`${this.gameService.gameData!.game.leaderboardRank}`);
         if (element) {
-            setTimeout(() => element.scrollIntoView({block: "start", behavior: "auto"}), 700);
+            setTimeout(() => element.scrollIntoView({ block: 'start', behavior: 'auto' }), 700);
         }
-    }
-
-    isCurrentGame(game: Game): boolean {
-        if (this.gameService.gameData && this.gameService.gameData.game) {
-            return game.id === this.gameService.gameData.game.id
-        }
-        return false;
     }
 }

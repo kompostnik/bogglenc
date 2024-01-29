@@ -3,6 +3,7 @@
         <h1>Bogglenc</h1>
     </div>
 </div>
+
 <div class="mt-5">
     <dl class="list-group list-group-flush main-menu-list">
         <li class="list-group-item">
@@ -28,20 +29,21 @@
         <li class="list-group-item">
             <button (click)="actionLeaderBoard()"
                     class="btn btn-outline-secondary btn-lg p-3 shadow-sm"
-                    type="button">Lestvica Najboljših
+                    type="button"><i class="bi bi-ladder"></i> Lestvica Najboljših
             </button>
         </li>
         <li class="list-group-item">
             <button (click)="actionOpenMenu()"
                     class="btn btn-outline-secondary btn-lg p-3 shadow-sm"
-                    type="button">Nastavitve
+                    type="button"><i class="bi bi-gear"></i> Nastavitve
             </button>
         </li>
         <li class="list-group-item">
-            <a class="btn btn-outline-secondary btn-lg p-3 shadow-sm"
-               href="https://kompostnik.itch.io/bogglenc"
-               target="_blank">
-                <i aria-hidden="true" class="bi bi-chat-square-heart text-primary me-2"></i>Skupnost
+            <a class="btn btn-outline-secondary btn-lg p-3 shadow-sm position-relative"
+                (click)="actionGoToProfile()"
+            >
+                <i class="bi bi-unlock" *ngIf="!authService.isAuthenticated"></i><i class="bi bi-lock-fill text-primary" *ngIf="authService.isAuthenticated"></i> Moj Profil
+                <div *ngIf="authService.isAuthenticated && authService.missingUsername" aria-hidden="true" class="attention bg-warning"></div>
             </a>
         </li>
     </dl>

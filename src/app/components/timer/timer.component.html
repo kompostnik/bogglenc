@@ -1,7 +1,7 @@
 <div class="timer position-relative">
     <div aria-hidden="true"
          class="btn p-0 bg-danger position-absolute animate__animated animate__infinite"
-         [class.animate__fadeOut]="time >= 90"
-         style="z-index: -1; top: 0; bottom:0; left: 0; width: {{time}}%;"
+         [class.animate__fadeOut]="lastSeconds"
+         style="z-index: -1; top: 0; bottom:0; left: 0; width: {{width}}%;"
     ></div>
 </div>

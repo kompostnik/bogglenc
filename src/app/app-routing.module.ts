@@ -1,8 +1,9 @@
-import {NgModule} from '@angular/core';
-import {RouterModule, Routes} from '@angular/router';
-import {MainMenuComponent} from "./views/main-menu/main-menu.component";
-import {GameComponent} from "./views/game/game.component";
-import {GameOverComponent} from "./views/game-over/game-over.component";
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { MainMenuComponent } from './views/main-menu/main-menu.component';
+import { GameComponent } from './views/game/game.component';
+import { GameOverComponent } from './views/game-over/game-over.component';
+import { ProfileComponent } from './views/profile/profile.component';
 
 const routes: Routes = [
     {
@@ -16,6 +17,10 @@ const routes: Routes = [
     {
         path: 'game-over',
         component: GameOverComponent
+    },
+    {
+        path: 'profile/:id',
+        component: ProfileComponent
     }
 ];
 

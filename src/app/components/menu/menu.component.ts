@@ -1,8 +1,8 @@
-import {ChangeDetectorRef, Component} from '@angular/core';
-import {BsModalRef, BsModalService} from "ngx-bootstrap/modal";
-import {GameService} from "../../services/game.service";
-import {LeaderBoardModalComponent} from "../leader-board-modal/leader-board-modal.component";
-import {Router} from "@angular/router";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { GameService } from '../../services/game.service';
+import { LeaderBoardModalComponent } from '../leader-board-modal/leader-board-modal.component';
+import { Router } from '@angular/router';
 
 export enum LumMode {
     LIGHT, DARK
@@ -11,7 +11,8 @@ export enum LumMode {
 @Component({
     selector: 'app-menu',
     templateUrl: './menu.component.html',
-    styleUrls: ['./menu.component.scss']
+    styleUrls: ['./menu.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MenuComponent {
 

@@ -1,0 +1,108 @@
+<app-modal
+    [iconClass]="'text-primary'"
+    [icon]="authService.isAuthenticated ? 'lock-fill': 'unlock'"
+    [title]="title"
+>
+
+    <div *ngIf="!(inProgress$ | async)" class="row">
+        <div class="col">
+            <p *ngIf="authModalState$.value !== AuthModalState.MISSING_USERNAME && authModalState$.value !== AuthModalState.AFTER_USERNAME" class="alert alert-info">
+                {{infoText}}
+            </p>
+            <p *ngIf="authModalState$.value === AuthModalState.MISSING_USERNAME" class="alert alert-info">
+                Potrebuješ še
+                <b>vzdevek</b>
+                , ki bo viden ostalim igralcem.
+            </p>
+        </div>
+    </div>
+
+    <div *ngIf="inProgress$ | async" class="row">
+        <div class="col">
+            <p class="alert alert-info">
+                Poteka preverjanje...
+                <span *ngIf="inProgress$ | async" class="spinner-border spinner-border-sm" role="status"></span>
+            </p>
+        </div>
+    </div>
+
+    <div *ngIf="authModalState$.value === AuthModalState.NO_AUTHENTICATION" class="row mt-3">
+        <div class="col">
+            <firebase-ui [language]="'sl'"></firebase-ui>
+        </div>
+    </div>
+
+    <ng-container *ngIf="authModalState$.value === AuthModalState.MISSING_USERNAME">
+        <form>
+            <div class="row">
+                <div class="col">
+                    <label
+                        class="label"
+                        for="username"
+                    >Vzdevek
+                    </label>
+                    <input
+                        #usernameInputElementRef
+                        [(ngModel)]="usernameInput"
+                        [required]="true"
+                        autofocus
+                        class="form-control text-uppercase" id="username" name="username"
+                    >
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div *ngIf="usernameInputError" class="col text-danger">
+                        {{usernameInputError}}
+                    </div>
+                    <div class="col mt-3">
+                        <a
+                            (click)="actionLogout()"
+                            *ngIf="authModalState$.value === AuthModalState.MISSING_USERNAME"
+                            class="btn btn-link text-uppercase"
+                        >
+                            Odjavi se
+                        </a>
+                        <button
+                            (click)="actionSubmitUsername()"
+                            [disabled]="(inProgressUsernameSubmit$ | async)"
+                            class="btn btn-primary float-end text-uppercase"
+                            type="submit"
+                        >
+                            <div
+                                *ngIf="(inProgressUsernameSubmit$ | async)" class="spinner-border spinner-border-sm"
+                                role="status"
+                            ></div>
+                            Potrdi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </ng-container>
+
+    <ng-container *ngIf="authModalState$.value === AuthModalState.AFTER_USERNAME">
+        <div class="row">
+            <div class="col-4">
+                <h5>Avatar</h5>
+                <app-player-avatar
+                    [seed]="authService.profile!.name" [height]="100"></app-player-avatar>
+            </div>
+            <div class="col">
+                <h5>Vzdevek</h5>
+                <span class="text-uppercase">{{authService.profile!.name}}</span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <button
+                    class="btn btn-primary float-end text-uppercase"
+                    type="button"
+                    (click)="actionCloseAfterUsername()"
+                >
+                    {{afterUsernameButtonText}}
+                </button>
+            </div>
+        </div>
+    </ng-container>
+</app-modal>

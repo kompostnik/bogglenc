@@ -1,24 +1,30 @@
-<div class="row border-bottom">
-    <div class="col-3 p-2 border-end">
-        <app-score></app-score>
+<div class="row">
+    <div class="col-2">
+        <app-score [score]="gameService.gameData?.game?.score!"></app-score>
     </div>
-    <div class="col p-2 d-flex align-items-center">
+    <div class="col-8">
         <app-inventory [gameOverCondition]="gameOverConditionInSeconds"></app-inventory>
-        <button (click)="actionOpenMenu()"
+    </div>
+    <div class="col-2">
+        <div class="d-flex align-items-center justify-content-end h-100">
+        <button (click)="actionExitGame()"
                 aria-label="Nastavitve"
-                class="btn btn-outline-secondary ms-auto"
+                class="btn btn-outline-secondary"
                 type="button">
-            <i class="bi bi-list"></i>
+            <i class="bi bi-x-lg"></i>
         </button>
+        </div>
     </div>
 </div>
 <div class="row">
     <div class="col p-2 pt-3" role="application">
         <app-board (wordSubmitEvent)="handleWordSubmittedEvent($event)"
                    [gameOverCondition]="gameOverConditionInSeconds"
+                   [wordLengthLimit]="wordLengthLimit"
                    [inProgress$]="inProgress$"
+                   [gameState$]="gameState$"
                    [lettersBag]="gameService.gameData!.lettersBag"
-                   [timeProgress$]="timeProgress$"
+                   [timeProgress]="gameService.gameData!.timerProgress"
                    [wordValid$]="wordValid$"
         ></app-board>
     </div>

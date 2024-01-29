@@ -46,9 +46,9 @@ export class Dictionary {
     // Filter the words
     return viableWords.filter(word => {
       // Check each character of the word
-      for (let char of word) {
+      for (const char of word) {
         // If character is not present in the set or its frequency is larger than in characters string, drop the word
-        if (!charsSet.has(char) || (charactersFrequencyMap?.get(char)! < this.countCharacterInString(char, word))) {
+        if (!charsSet.has(char) || ((charactersFrequencyMap.get(char) || 0) < this.countCharacterInString(char, word))) {
           return false;  // Early rejection
         }
       }

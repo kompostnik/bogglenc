@@ -5,6 +5,7 @@ import { AuthService, UserProfile } from '../../services/auth.service';
 import { BackendService, Game } from '../../services/backend.service';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { AngularFireAnalytics } from '@angular/fire/compat/analytics';
+import { getAnalytics, logEvent } from '@angular/fire/analytics';
 
 @Component({
     selector: 'app-profile',
@@ -40,7 +41,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this.myProfile = this.authService.isAuthenticated && this.profileId === this.authService.profile?.name;
             this.loadUserProfile();
         }
-        this.analytics.logEvent('profile' as any, { profileId: this.profileId } as any);
+        logEvent(getAnalytics(),'profile' as any, { profileId: this.profileId } as any);
     }
 
     actionLogout() {

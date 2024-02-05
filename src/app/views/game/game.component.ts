@@ -182,10 +182,11 @@ export class GameComponent implements OnInit, OnDestroy {
         this.gameService.guessedWords?.push(this.gameService.currentWord);
         this.wordValid$.next(true);
         this.cdr.detectChanges();
+        this.gameService.applyBackendGame(check.game);
+        this.gameService.persistGameData();
 
         setTimeout(() => {
             // wait for animation to apply changes
-            this.gameService.applyBackendGame(check.game);
             this.inProgress$.next(false);
             this.cdr.detectChanges();
             if(this.gameState$.value === GameState.WORD_IN_SUBMISSION) {

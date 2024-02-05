@@ -7,35 +7,37 @@
 
 <ng-container *ngIf="inProgress$ | async">
     <div class="alert alert-secondary text-center">
-        Nalagam profila
+        Nalagam profil
         <div class="spinner-border spinner-border-sm" role="status"></div>
     </div>
 </ng-container>
 
+<div class="row">
+    <div class="col d-flex justify-content-between">
+        <button
+            [routerLink]="''"
+            aria-label="Nazaj v Meni"
+            class="btn btn-outline-secondary"
+            type="button"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Nazaj v Meni
+        </button>
+        <button
+            (click)="actionLogout()"
+            *ngIf="myProfile"
+            aria-label="Odjavi se"
+            class="btn btn-secondary"
+            type="button"
+        >
+            <i class="bi bi-dash-circle"></i> Odjavi se
+        </button>
+    </div>
+</div>
+
 <ng-container *ngIf="!(inProgress$ | async)">
 
-    <div class="row">
-        <div class="col d-flex justify-content-between">
-            <button
-                [routerLink]="''"
-                aria-label="Nazaj v Meni"
-                class="btn btn-outline-secondary"
-                type="button"
-            >
-                <i class="bi bi-arrow-left"></i>
-                Nazaj v Meni
-            </button>
-            <button
-                (click)="actionLogout()"
-                *ngIf="myProfile"
-                aria-label="Odjavi se"
-                class="btn btn-secondary"
-                type="button"
-            >
-                <i class="bi bi-dash-circle"></i> Odjavi se
-            </button>
-        </div>
-    </div>
+
     <div *ngIf="userProfile" class="row mt-3">
         <div class="col-4">
             <h5>Avatar</h5>
@@ -60,7 +62,7 @@
                         </th>
                         <th>
                             <i class="bi bi-cup-straw"></i>
-                            Št. Besed
+                            Št. Gesel
                         </th>
                         <th>
                             <i class="bi bi-book"></i>
